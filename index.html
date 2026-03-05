@@ -1,0 +1,2944 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PushToApp — Website to Android APK</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0d0d;
+  --bg2:#111111;
+  --surface:#181818;
+  --card:#1e1e1e;
+  --card2:#232323;
+  --border:#2a2a2a;
+  --border-hi:#3a3a3a;
+  --text:#e6e6e6;
+  --sub:#888888;
+  --muted:#4a4a4a;
+  --faint:#272727;
+  --white:#f5f5f5;
+  --accent:#e0e0e0;
+  --hi:#ffffff;
+  --hi2:#e0e0e0;
+  --green:#34d399;
+  --r:10px;
+  --shadow:0 4px 24px rgba(0,0,0,0.7);
+  --font-display:'Syne',sans-serif;
+  --font-body:'DM Sans',sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);min-height:100vh;overflow-x:hidden;font-size:14px;line-height:1.6}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--faint);border-radius:2px}
+
+/* ── HEADER ── */
+.hdr{
+  background:rgba(12,12,14,0.92);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  padding:0 32px;height:60px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:300;
+}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--font-display);font-weight:700;font-size:18px;letter-spacing:-0.5px;color:var(--white)}
+.logo-icon{width:34px;height:34px;flex-shrink:0}
+.logo-by{font-family:var(--font-mono);font-size:10px;color:var(--muted);font-weight:400;margin-left:4px;letter-spacing:0.2px}
+.hdr-badge{
+  font-size:10px;font-family:var(--font-mono);
+  padding:4px 11px;border-radius:6px;
+  background:var(--surface);border:1px solid var(--border);
+  color:var(--sub);letter-spacing:0.5px;
+}
+.hdr-nav-btn{
+  font-size:12px;font-weight:500;font-family:var(--font-body);
+  padding:6px 16px;border-radius:8px;cursor:pointer;
+  background:var(--surface);border:1px solid var(--border);
+  color:var(--sub);transition:all 0.2s;display:flex;align-items:center;gap:7px;
+}
+.hdr-nav-btn:hover{border-color:var(--border-hi);color:var(--text);background:var(--card)}
+.hdr-apps-count{
+  background:var(--hi);color:#fff;
+  font-size:9px;font-weight:700;
+  padding:1px 6px;border-radius:8px;min-width:18px;text-align:center;
+}
+
+/* ── MY APPS PAGE ── */
+#myAppsPage{display:none;min-height:100vh;background:var(--bg)}
+#myAppsPage.show{display:block;animation:fadeUp 0.25s ease}
+.apps-header{
+  background:var(--bg2);border-bottom:1px solid var(--border);
+  padding:0 32px;height:60px;display:flex;align-items:center;justify-content:space-between;
+}
+.apps-back{
+  display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;
+  color:var(--sub);cursor:pointer;background:transparent;border:none;
+  font-family:var(--font-body);transition:color 0.15s;padding:0;
+}
+.apps-back:hover{color:var(--text)}
+.apps-layout{max-width:940px;margin:0 auto;padding:40px 24px 100px}
+.apps-hero{margin-bottom:32px}
+.apps-hero-title{font-size:26px;font-weight:700;letter-spacing:-0.5px;color:var(--white);font-family:var(--font-display)}
+.apps-hero-sub{font-size:13px;color:var(--sub);margin-top:5px}
+.apps-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px}
+.app-card{
+  background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:18px;transition:border-color 0.2s,background 0.2s,transform 0.2s;
+  display:flex;flex-direction:column;gap:12px;
+}
+.app-card:hover{border-color:var(--border-hi);background:var(--card2);transform:translateY(-2px)}
+.app-card-top{display:flex;align-items:center;gap:14px}
+.app-card-icon{
+  width:52px;height:52px;border-radius:12px;background:var(--surface);
+  border:1px solid var(--border);display:flex;align-items:center;justify-content:center;
+  font-size:22px;flex-shrink:0;overflow:hidden;
+}
+.app-card-icon img{width:100%;height:100%;object-fit:cover;border-radius:11px}
+.app-card-name{font-size:14px;font-weight:700;color:var(--white);letter-spacing:-0.2px;font-family:var(--font-display)}
+.app-card-url{font-size:11px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:170px;margin-top:2px}
+.app-card-meta{display:flex;gap:5px;flex-wrap:wrap}
+.app-meta-badge{
+  font-size:10px;font-family:var(--font-mono);
+  padding:2px 8px;border-radius:5px;
+  background:var(--surface);border:1px solid var(--border);color:var(--muted);
+}
+.app-card-feats{display:flex;flex-wrap:wrap;gap:4px}
+.app-feat-tag{font-size:10px;padding:2px 7px;border-radius:5px;background:var(--card2);color:var(--sub);border:1px solid var(--border)}
+.app-card-actions{display:flex;gap:7px;margin-top:2px}
+.app-action-btn{
+  flex:1;padding:8px 12px;border-radius:8px;font-size:11px;font-weight:600;
+  font-family:var(--font-body);cursor:pointer;transition:all 0.15s;text-align:center;
+}
+.app-action-dl{background:var(--white);color:var(--bg);border:none}
+.app-action-dl:hover{background:var(--accent)}
+.app-action-del{background:transparent;color:var(--muted);border:1px solid var(--border)}
+.app-action-del:hover{border-color:#e55;color:#f77}
+.apps-empty{
+  text-align:center;padding:90px 20px;
+  background:var(--card);border:1px dashed var(--border-hi);border-radius:16px;
+}
+.apps-empty-icon{font-size:42px;margin-bottom:16px}
+.apps-empty-title{font-size:17px;font-weight:700;color:var(--white);margin-bottom:7px;font-family:var(--font-display)}
+.apps-empty-sub{font-size:13px;color:var(--sub);line-height:1.7}
+.apps-empty-btn{
+  margin-top:22px;display:inline-flex;align-items:center;gap:8px;
+  padding:10px 24px;background:var(--white);color:var(--bg);
+  border:none;border-radius:8px;font-size:13px;font-weight:700;
+  cursor:pointer;font-family:var(--font-body);transition:all 0.15s;
+}
+.apps-empty-btn:hover{background:var(--accent)}
+.app-card-date{font-size:10px;color:var(--muted);font-family:var(--font-mono)}
+
+/* ── DONE BUTTON ── */
+.btn-done{
+  display:inline-flex;align-items:center;gap:8px;margin-top:12px;
+  padding:10px 24px;background:transparent;color:var(--sub);
+  border:1px solid var(--border);border-radius:8px;font-size:13px;font-weight:500;
+  cursor:pointer;transition:all 0.15s;font-family:var(--font-body);
+}
+.btn-done:hover{border-color:var(--border-hi);color:var(--text)}
+
+/* ── STEP BAR ── */
+.stepbar{
+  background:var(--bg2);
+  border-bottom:1px solid var(--border);
+  padding:0 32px;
+}
+.stepbar-inner{
+  max-width:760px;margin:0 auto;
+  display:flex;align-items:center;height:54px;
+  gap:0;
+}
+.sb-step{display:flex;align-items:center;flex:1;gap:0;position:relative}
+.sb-circle{
+  width:28px;height:28px;border-radius:50%;
+  border:1.5px solid var(--border-hi);
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:600;color:var(--muted);
+  background:var(--bg2);flex-shrink:0;
+  transition:all 0.3s;font-family:var(--font-mono);
+  position:relative;z-index:1;
+}
+.sb-text{
+  font-size:12px;font-weight:500;color:var(--muted);
+  margin-left:9px;white-space:nowrap;transition:color 0.25s;font-family:var(--font-body);
+}
+.sb-line{flex:1;height:1px;background:var(--border);margin:0 10px;transition:background 0.25s}
+.sb-step.active .sb-circle{border-color:var(--white);color:var(--white);background:transparent}
+.sb-step.active .sb-text{color:var(--white)}
+.sb-step.done .sb-circle{border-color:var(--green);color:var(--bg);background:var(--green)}
+.sb-step.done .sb-text{color:var(--sub)}
+.sb-step.done .sb-line,.sb-step.done+.sb-step .sb-line{background:var(--border-hi)}
+@media(max-width:500px){.sb-text{display:none}.sb-circle{margin-right:4px}}
+
+/* ── LAYOUT ── */
+.layout{max-width:1200px;margin:0 auto;padding:32px 24px 100px;display:grid;grid-template-columns:1fr 300px;gap:32px;align-items:start}
+@media(max-width:900px){.layout{grid-template-columns:1fr}.preview-col{display:none}}
+
+/* ── PANELS ── */
+.step-panel{display:none}
+.step-panel.active{display:block;animation:fadeUp 0.3s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+/* ── SECTION HEAD ── */
+.sec-head{margin-bottom:24px}
+.sec-eyebrow{font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:3px;color:var(--muted);margin-bottom:7px}
+.sec-title{font-size:24px;font-weight:700;letter-spacing:-0.5px;color:var(--white);font-family:var(--font-display)}
+.sec-sub{font-size:13px;color:var(--sub);margin-top:5px;line-height:1.7}
+
+/* ── CARD ── */
+.card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:22px;
+  margin-bottom:14px;
+  transition:border-color 0.2s;
+}
+.card:hover{border-color:var(--border-hi)}
+.card-head{display:flex;align-items:center;gap:12px;margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.c-icon{width:36px;height:36px;border-radius:9px;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.c-title{font-size:13px;font-weight:700;color:var(--white);font-family:var(--font-display)}
+.c-sub{font-size:11px;color:var(--sub);margin-top:2px}
+
+/* ── FORM ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.s2{grid-column:1/-1}
+@media(max-width:580px){.g2{grid-template-columns:1fr}}
+.field{display:flex;flex-direction:column;gap:6px}
+label{font-size:10px;font-weight:600;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:1.5px;color:var(--sub)}
+label .req{color:var(--hi)}
+input[type=text],input[type=url],input[type=email],textarea,select{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:10px 13px;
+  font-family:var(--font-body);font-size:13px;color:var(--text);
+  outline:none;transition:border-color 0.2s,box-shadow 0.2s;width:100%;
+}
+input:focus,textarea:focus,select:focus{border-color:var(--border-hi)}
+input::placeholder,textarea::placeholder{color:var(--muted)}
+textarea{resize:vertical;min-height:68px;line-height:1.6}
+.pkg-row{
+  font-family:var(--font-mono);font-size:11px;color:var(--sub);
+  padding:10px 13px;background:var(--surface);border-radius:8px;
+  border:1px solid var(--border);
+}
+.pkg-row .hi{color:var(--accent)}
+
+/* ── COLOR ── */
+.cpair{display:flex;gap:8px;align-items:center}
+.cpair input[type=color]{width:40px;height:38px;border:1px solid var(--border);border-radius:6px;padding:3px;background:var(--surface);cursor:pointer;flex-shrink:0}
+.cpair input[type=text]{flex:1}
+.chips{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;align-items:center}
+.chip{width:22px;height:22px;border-radius:4px;border:1px solid var(--border-hi);cursor:pointer;flex-shrink:0;transition:transform 0.1s}
+.chip:hover{transform:scale(1.15)}
+.chip-lbl{font-size:10px;color:var(--muted)}
+
+/* ── ICON DROP ── */
+.icon-drop{
+  border:1px dashed var(--border-hi);border-radius:8px;padding:24px;
+  text-align:center;cursor:pointer;transition:border-color 0.15s,background 0.15s;
+  background:var(--surface);position:relative;
+}
+.icon-drop:hover{border-color:var(--sub);background:var(--card2)}
+.icon-drop input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.icon-prev-img{width:64px;height:64px;border-radius:12px;object-fit:cover;display:none;margin:0 auto 10px;box-shadow:var(--shadow)}
+.icon-prev-img.show{display:block}
+.drop-hint{font-size:12px;color:var(--sub)}.drop-hint strong{color:var(--accent)}
+.drop-note{font-size:10px;color:var(--muted);margin-top:4px;font-family:var(--font-mono)}
+
+/* ── FEATURES ── */
+.fgroup{margin-bottom:18px}
+.fgroup-label{
+  font-size:10px;font-family:var(--font-mono);text-transform:uppercase;
+  letter-spacing:2px;color:var(--muted);margin-bottom:8px;
+}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+@media(max-width:600px){.fgrid{grid-template-columns:1fr}}
+.feat{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:11px 12px;border-radius:7px;
+  border:1px solid var(--border);background:var(--surface);
+  cursor:pointer;transition:border-color 0.15s,background 0.15s;user-select:none;
+}
+.feat:hover{border-color:var(--border-hi);background:var(--card2)}
+.feat.on{border-color:var(--border-hi);background:var(--card)}
+.feat-em{font-size:16px;flex-shrink:0;margin-top:1px;line-height:1}
+.feat-body{flex:1;min-width:0}
+.feat-name{font-size:12px;font-weight:600;color:var(--white);line-height:1.3}
+.feat-desc{font-size:11px;color:var(--sub);margin-top:2px;line-height:1.5}
+.ftag{font-family:var(--font-mono);font-size:9px;padding:1px 6px;border-radius:3px;margin-top:4px;display:inline-block;background:var(--faint);color:var(--muted);border:1px solid var(--border)}
+.chk{
+  width:18px;height:18px;border-radius:50%;
+  border:1.5px solid var(--muted);
+  display:flex;align-items:center;justify-content:center;
+  font-size:9px;color:transparent;
+  transition:all 0.15s;flex-shrink:0;margin-top:1px;
+}
+.feat.on .chk{border-color:var(--white);background:var(--white);color:var(--bg)}
+.feat-extra{display:none;margin-top:9px;padding-top:9px;border-top:1px solid var(--border)}
+.feat-extra.show{display:block}
+
+/* ── SUMMARY ── */
+.sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+@media(max-width:480px){.sum-grid{grid-template-columns:1fr}}
+.sum-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px}
+.sum-lbl{font-size:9px;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:4px}
+.sum-val{font-size:13px;font-weight:600;word-break:break-all;color:var(--white)}
+.feat-pills{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
+.feat-pill{font-size:11px;padding:3px 10px;border-radius:6px;background:var(--card2);color:var(--sub);border:1px solid var(--border)}
+
+/* ── BUTTONS ── */
+.btn-row{display:flex;justify-content:space-between;align-items:center;margin-top:22px;gap:10px}
+.btn-back{
+  padding:10px 22px;background:transparent;border:1px solid var(--border);
+  border-radius:8px;color:var(--sub);font-family:var(--font-body);
+  font-size:13px;font-weight:500;cursor:pointer;transition:all 0.2s;
+}
+.btn-back:hover{border-color:var(--border-hi);color:var(--text)}
+.btn-next{
+  padding:10px 24px;background:var(--hi);border:none;
+  border-radius:8px;color:#fff;font-family:var(--font-body);
+  font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;
+  display:flex;align-items:center;gap:8px;
+  box-shadow:none;
+}
+.btn-next:hover{background:var(--hi2);transform:translateY(-1px)}
+.btn-next:active{transform:none;box-shadow:none}
+.btn-gen{
+  width:100%;padding:14px;
+  background:var(--hi);border:none;border-radius:10px;
+  color:#fff;font-family:var(--font-body);font-size:15px;font-weight:600;
+  cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:9px;justify-content:center;
+  box-shadow:none;
+}
+.btn-gen:hover{background:var(--hi2);transform:translateY(-1px)}
+.btn-gen:disabled{opacity:0.3;cursor:not-allowed;transform:none}
+
+/* ── PROGRESS ── */
+.prog-wrap{margin-top:14px;display:none}
+.prog-top{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:10px;color:var(--muted);margin-bottom:6px}
+.prog-bar{height:3px;background:var(--surface);border-radius:2px;overflow:hidden}
+.prog-fill{height:100%;background:var(--white);border-radius:2px;width:0%;transition:width 0.35s ease}
+
+/* ── NOTICES ── */
+.notice{
+  display:flex;gap:10px;padding:12px 15px;border-radius:10px;
+  font-size:12px;line-height:1.7;margin-bottom:14px;
+  background:var(--surface);border:1px solid var(--border);color:var(--sub);
+}
+
+/* ── OUTPUT ── */
+.output-area{display:none}
+.output-area.show{display:block;animation:fadeUp 0.3s ease}
+.success-banner{
+  background:var(--card);border:1px solid var(--border-hi);
+  border-radius:16px;padding:30px;text-align:center;margin:20px 0;
+}
+.s-icon{
+  width:60px;height:60px;border-radius:50%;
+  background:var(--card2);border:1.5px solid var(--border-hi);
+  display:flex;align-items:center;justify-content:center;font-size:26px;
+  margin:0 auto 14px;animation:pop 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
+}
+@keyframes pop{from{transform:scale(0.2);opacity:0}to{transform:scale(1);opacity:1}}
+.s-title{font-size:21px;font-weight:700;color:var(--white);letter-spacing:-0.4px;font-family:var(--font-display)}
+.s-sub{color:var(--sub);font-size:12px;margin-top:6px}
+.dl-btn{
+  display:inline-flex;align-items:center;gap:8px;margin-top:16px;
+  padding:10px 24px;background:var(--white);color:var(--bg);
+  border:none;border-radius:8px;font-size:13px;font-weight:700;
+  cursor:pointer;transition:all 0.15s;font-family:var(--font-body);
+}
+.dl-btn:hover{background:var(--accent)}
+
+/* ── TABS ── */
+.tab-row{display:flex;gap:4px;margin-bottom:16px;background:var(--surface);border-radius:8px;padding:3px;border:1px solid var(--border)}
+.tab{
+  padding:6px 14px;border:none;background:transparent;
+  border-radius:6px;font-family:var(--font-body);font-size:11px;font-weight:600;
+  color:var(--muted);cursor:pointer;transition:all 0.15s;
+}
+.tab.active{background:var(--card2);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,0.3)}
+.path{display:none}.path.show{display:block}
+
+/* ── STEPS LIST ── */
+.slist{display:flex;flex-direction:column}
+.sli{display:flex;gap:12px}
+.sli-spine{display:flex;flex-direction:column;align-items:center}
+.sli-dot{width:24px;height:24px;border-radius:50%;background:var(--surface);border:1.5px solid var(--border-hi);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:10px;font-weight:600;color:var(--sub);flex-shrink:0}
+.sli-conn{width:1px;flex:1;min-height:12px;background:var(--border);margin:3px 0}
+.sli:last-child .sli-conn{display:none}
+.sli-body{padding:2px 0 16px}
+.sli-h{font-size:12px;font-weight:700;color:var(--white);margin-bottom:3px;font-family:var(--font-display)}
+.sli-p{font-size:11px;color:var(--sub);line-height:1.7}
+.sli-p code{background:var(--surface);border:1px solid var(--border);padding:1px 5px;border-radius:3px;font-family:var(--font-mono);font-size:10px;color:var(--accent)}
+
+.sli-p a{color:var(--accent)}
+.sli-box{background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:8px 11px;margin-top:6px;font-family:var(--font-mono);font-size:10px;color:var(--sub);line-height:1.6}
+.divider{height:1px;background:var(--border);margin:16px 0}
+
+/* ── PHONE PREVIEW ── */
+.preview-col{position:relative}
+.prev-sticky{position:sticky;top:72px;display:flex;flex-direction:column;align-items:center;gap:12px}
+.prev-lbl{font-family:var(--font-mono);font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--muted)}
+.prev-hint{font-size:10px;color:var(--muted);text-align:center;line-height:1.5}
+
+/* PHONE SHELL — bigger */
+.phone-wrap{position:relative}
+.phone-shell{
+  width:252px;height:516px;
+  background:#1a1a1a;
+  border-radius:40px;
+  padding:11px;
+  border:1.5px solid #333;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,0.06),0 32px 80px rgba(0,0,0,0.85),0 0 0 1px rgba(0,0,0,0.5);
+  position:relative;
+}
+/* Power button */
+.phone-shell::before{
+  content:'';position:absolute;
+  right:-4px;top:110px;width:4px;height:44px;
+  background:#242424;border-radius:0 3px 3px 0;
+  box-shadow:inset -1px 0 0 rgba(255,255,255,0.05);
+}
+/* Volume buttons */
+.phone-shell::after{
+  content:'';position:absolute;
+  left:-4px;top:90px;width:4px;height:32px;
+  background:#242424;border-radius:3px 0 0 3px;
+  box-shadow:inset 1px 0 0 rgba(255,255,255,0.05);
+}
+.phone-vol2{
+  position:absolute;left:-4px;top:132px;width:4px;height:32px;
+  background:#242424;border-radius:3px 0 0 3px;
+  box-shadow:inset 1px 0 0 rgba(255,255,255,0.05);
+}
+.phone-notch{
+  position:absolute;top:18px;left:50%;transform:translateX(-50%);
+  width:52px;height:6px;
+  background:#0f0f0f;border-radius:4px;z-index:10;
+}
+.phone-cam{
+  position:absolute;top:19px;right:71px;
+  width:6px;height:6px;
+  background:#111;border-radius:50%;z-index:10;
+  box-shadow:inset 0 0 0 1.5px #0a0a0a, 0 0 0 1px #1f1f1f;
+}
+.phone-screen{
+  width:100%;height:100%;
+  border-radius:30px;overflow:hidden;
+  background:#0f0f0f;position:relative;
+  transition:background 0.5s;
+}
+
+/* ── INTERACTIVE STATES ── */
+/* Splash */
+.splash-view{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:14px;z-index:10;
+  opacity:0;pointer-events:none;transition:opacity 0.35s;
+}
+.splash-view.show{opacity:1;pointer-events:all}
+.splash-icon-wrap{
+  width:80px;height:80px;border-radius:20px;
+  background:rgba(255,255,255,0.12);
+  display:flex;align-items:center;justify-content:center;overflow:hidden;
+  box-shadow:0 8px 32px rgba(0,0,0,0.4);
+}
+.splash-icon-wrap img{width:100%;height:100%;object-fit:cover;display:none}
+.splash-icon-wrap svg{flex-shrink:0}
+.splash-name{
+  font-family:var(--font-body);font-size:17px;font-weight:800;
+  color:#fff;text-align:center;max-width:180px;
+  word-break:break-word;letter-spacing:-0.3px;
+}
+.splash-tagline{font-size:11px;color:rgba(255,255,255,0.45);font-family:var(--font-body);margin-top:-6px}
+.splash-dots{display:flex;gap:5px;margin-top:8px}
+.sdot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,0.35);animation:dp 1.2s ease-in-out infinite}
+.sdot:nth-child(2){animation-delay:.2s}.sdot:nth-child(3){animation-delay:.4s}
+@keyframes dp{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1.1)}}
+
+/* Home screen */
+.home-view{
+  position:absolute;inset:0;background:#f0f0f0;z-index:5;
+  padding:0;opacity:0;pointer-events:none;transition:opacity 0.35s;
+  display:flex;flex-direction:column;
+}
+.home-view.show{opacity:1;pointer-events:all}
+.home-statusbar{
+  height:24px;background:rgba(0,0,0,0.06);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 14px;font-size:8px;color:rgba(0,0,0,0.5);
+  font-family:var(--font-mono);flex-shrink:0;
+}
+.home-time{font-weight:700;font-size:9px;color:rgba(0,0,0,0.7)}
+.home-icons-wrap{font-size:8px;display:flex;gap:4px;align-items:center}
+.home-wallpaper{
+  flex:1;background:linear-gradient(160deg,#1a1a1a 0%,#141414 60%,#111 100%);
+  display:flex;
+  padding:28px 16px 16px;
+  align-items:flex-start;justify-content:center;
+  position:relative;overflow:hidden;
+}
+.home-wallpaper::before{content:none}
+.home-app-icon{
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  cursor:pointer;position:relative;z-index:1;
+  transition:transform 0.12s;user-select:none;
+  -webkit-tap-highlight-color:transparent;
+}
+.home-app-icon:active{transform:scale(0.88)}
+.home-icon-img{
+  width:64px;height:64px;border-radius:16px;
+  display:flex;align-items:center;justify-content:center;overflow:hidden;
+  box-shadow:0 6px 20px rgba(0,0,0,0.5);
+  border:1px solid rgba(255,255,255,0.1);
+}
+.home-icon-img img{width:100%;height:100%;object-fit:cover;display:none}
+.home-icon-img svg{flex-shrink:0}
+.home-icon-lbl{
+  font-size:10px;font-family:var(--font-body);font-weight:600;
+  color:rgba(255,255,255,0.95);text-align:center;
+  max-width:72px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  text-shadow:0 1px 4px rgba(0,0,0,0.8);
+}
+.home-swipe-hint{
+  position:absolute;bottom:70px;left:0;right:0;
+  display:flex;justify-content:center;
+  pointer-events:none;
+}
+.swipe-dot{width:36px;height:3px;background:rgba(255,255,255,0.25);border-radius:2px}
+
+/* Web view */
+.web-view{
+  position:absolute;inset:0;z-index:15;display:flex;
+  flex-direction:column;background:#f5f5f5;border-radius:30px;overflow:hidden;
+  opacity:0;pointer-events:none;transition:opacity 0.35s;
+}
+.web-view.show{opacity:1;pointer-events:all}
+.web-statusbar{
+  height:22px;background:#1a1a1a;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 14px;font-size:8px;color:rgba(255,255,255,0.6);
+  font-family:var(--font-mono);flex-shrink:0;
+}
+.web-urlbar{
+  background:#2a2a2a;padding:5px 8px;
+  display:flex;align-items:center;gap:6px;flex-shrink:0;
+}
+.web-urlbar-dot{width:6px;height:6px;border-radius:50%;background:#555;flex-shrink:0}
+.web-urlbar-text{
+  flex:1;background:#1a1a1a;border-radius:4px;
+  font-size:7.5px;font-family:var(--font-mono);
+  color:#888;padding:3px 6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.web-iframe-wrap{flex:1;overflow:hidden;position:relative;background:#fff}
+.web-iframe-wrap iframe{width:300%;height:300%;transform:scale(0.333);transform-origin:0 0;border:none;pointer-events:none}
+.web-no-preview{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:8px;padding:16px;text-align:center;background:#fff}
+.web-no-preview-icon{font-size:28px}
+.web-no-preview-text{font-size:9.5px;color:#888;line-height:1.6;font-family:var(--font-body)}
+/* Android nav bar at bottom */
+.web-navbar{
+  height:36px;background:#1a1a1a;display:flex;align-items:center;
+  justify-content:center;gap:32px;flex-shrink:0;
+  border-radius:0 0 30px 30px;
+}
+.nav-btn{
+  width:20px;height:20px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;opacity:0.5;transition:opacity 0.15s;
+}
+.nav-btn:hover{opacity:0.9}
+.nav-btn svg{width:14px;height:14px}
+
+/* tap hint overlay */
+.tap-hint{
+  position:absolute;bottom:76px;left:0;right:0;
+  display:flex;justify-content:center;pointer-events:none;
+  opacity:0;transition:opacity 0.6s;
+}
+@keyframes hintFade{0%{opacity:0}20%{opacity:1}80%{opacity:1}100%{opacity:0}}
+.tap-hint-pill{
+  background:rgba(0,0,0,0.55);backdrop-filter:blur(8px);
+  color:rgba(255,255,255,0.9);font-size:9px;font-family:var(--font-body);font-weight:600;
+  padding:5px 12px;border-radius:20px;display:flex;align-items:center;gap:5px;
+  border:1px solid rgba(255,255,255,0.1);
+}
+.mode-toggle{display:flex;gap:4px;background:var(--surface);border-radius:6px;padding:3px;border:1px solid var(--border)}
+.mtab{flex:1;padding:7px 10px;border:none;background:transparent;border-radius:4px;font-family:var(--font-body);font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;transition:all 0.15s;text-align:center}
+.mtab.active{background:var(--white);color:var(--bg)}
+.html-drop{border:1px dashed var(--border-hi);border-radius:8px;padding:20px;text-align:center;cursor:pointer;transition:border-color 0.15s,background 0.15s;background:var(--surface);position:relative}
+.html-drop:hover{border-color:var(--sub);background:var(--card2)}
+.html-drop input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.html-ready{display:none;align-items:center;gap:8px;padding:4px 0}
+.html-ready.show{display:flex}
+
+/* ── iOS SECTION ── */
+.ios-banner{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;margin-top:14px}
+.ios-title{font-size:13px;font-weight:700;color:var(--white);margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.ios-sub{font-size:11px;color:var(--sub);margin-bottom:12px;line-height:1.6}
+.ios-tabs{display:flex;gap:4px;margin-bottom:12px}
+.ios-tab{padding:5px 12px;border:1px solid var(--border);background:transparent;border-radius:5px;font-family:var(--font-body);font-size:11px;font-weight:600;color:var(--muted);cursor:pointer;transition:all 0.15s}
+.ios-tab.active{background:var(--white);border-color:var(--white);color:var(--bg)}
+.ios-path{display:none}.ios-path.show{display:block}
+.btn-ios{display:inline-flex;align-items:center;gap:8px;padding:9px 20px;background:var(--surface);border:1px solid var(--border-hi);border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.15s;font-family:var(--font-body);color:var(--text)}
+.btn-ios:hover{background:var(--card2);border-color:var(--sub)}
+
+/* ── HOMEPAGE ── */
+#homePage{
+  min-height:100vh;background:var(--bg);
+  display:flex;flex-direction:column;
+}
+#homePage.hidden{display:none}
+.hp-nav{
+  height:56px;padding:0 28px;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--border);
+  background:var(--bg);
+}
+.hp-hero{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;text-align:center;
+  padding:90px 24px 70px;
+  position:relative;overflow:hidden;
+}
+.hp-hero::before{content:none}
+.hp-badge{
+  display:inline-flex;align-items:center;gap:7px;
+  background:var(--surface);border:1px solid var(--border-hi);
+  border-radius:20px;padding:5px 14px;
+  font-size:11px;font-family:var(--font-mono);
+  color:var(--sub);letter-spacing:0.5px;margin-bottom:28px;position:relative;
+}
+.hp-badge-dot{width:6px;height:6px;border-radius:50%;background:#34d399;flex-shrink:0}
+.hp-title{
+  font-size:clamp(34px,5.5vw,62px);font-weight:900;
+  letter-spacing:-2px;color:var(--white);line-height:1.05;
+  margin-bottom:22px;max-width:720px;position:relative;
+}
+.hp-title-grad{
+  background:linear-gradient(135deg,#fff 20%,#777);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.hp-sub{
+  font-size:16px;color:var(--sub);line-height:1.75;
+  max-width:500px;margin-bottom:44px;font-weight:400;position:relative;
+}
+.hp-cta-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:center;position:relative}
+.hp-cta-primary{
+  display:inline-flex;align-items:center;gap:10px;
+  padding:14px 32px;background:var(--white);color:var(--bg);
+  border:none;border-radius:10px;font-size:15px;font-weight:700;
+  cursor:pointer;font-family:var(--font-display);transition:all 0.2s;
+  letter-spacing:-0.2px;
+}
+.hp-cta-primary:hover{background:var(--accent);transform:translateY(-1px)}
+.hp-cta-primary:active{transform:none}
+.hp-cta-secondary{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:14px 24px;background:transparent;color:var(--sub);
+  border:1px solid var(--border-hi);border-radius:10px;
+  font-size:14px;font-weight:500;cursor:pointer;
+  font-family:var(--font-body);transition:all 0.2s;
+}
+.hp-cta-secondary:hover{border-color:var(--sub);color:var(--text)}
+.hp-divider{width:100%;max-width:960px;height:1px;background:var(--border);margin:0 auto}
+.hp-stats{
+  display:flex;gap:48px;padding:40px 0;
+  flex-wrap:wrap;justify-content:center;position:relative;
+}
+.hp-stat{text-align:center}
+.hp-stat-num{font-size:30px;font-weight:800;color:var(--white);letter-spacing:-1.5px;font-family:var(--font-display)}
+.hp-stat-lbl{font-size:10px;color:var(--muted);margin-top:3px;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:1.5px}
+
+/* HOW IT WORKS */
+.hp-section{padding:80px 24px;max-width:960px;margin:0 auto;width:100%}
+.hp-section-eyebrow{
+  font-family:var(--font-mono);font-size:10px;
+  text-transform:uppercase;letter-spacing:3px;color:var(--muted);
+  text-align:center;margin-bottom:10px;
+}
+.hp-section-title{
+  font-size:30px;font-weight:800;color:var(--white);
+  text-align:center;letter-spacing:-0.7px;margin-bottom:8px;
+}
+.hp-section-sub{
+  font-size:13px;color:var(--sub);text-align:center;
+  margin-bottom:44px;line-height:1.7;max-width:440px;
+  margin-left:auto;margin-right:auto;
+}
+.hp-steps-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+  gap:2px;background:var(--border);border-radius:12px;overflow:hidden;
+  border:1px solid var(--border);
+}
+.hp-step-card{
+  background:var(--card);padding:26px 22px;
+  display:flex;flex-direction:column;gap:12px;
+  position:relative;
+}
+.hp-step-num{
+  width:30px;height:30px;border-radius:7px;
+  background:var(--surface);border:1px solid var(--border-hi);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--sub);
+  flex-shrink:0;
+}
+.hp-step-icon{font-size:24px;line-height:1}
+.hp-step-title{font-size:13px;font-weight:700;color:var(--white);letter-spacing:-0.2px;line-height:1.3}
+.hp-step-desc{font-size:11.5px;color:var(--sub);line-height:1.7}
+.hp-step-tag{
+  display:inline-block;margin-top:2px;
+  font-size:9px;font-family:var(--font-mono);
+  padding:2px 7px;border-radius:4px;background:var(--surface);
+  border:1px solid var(--border);color:var(--muted);letter-spacing:0.5px;
+}
+
+/* FEATURES GRID */
+.hp-feat-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));
+  gap:10px;
+}
+.hp-feat-card{
+  background:var(--card);border:1px solid var(--border);border-radius:10px;
+  padding:18px;display:flex;gap:12px;align-items:flex-start;
+  transition:border-color 0.15s,background 0.15s;
+}
+.hp-feat-card:hover{border-color:var(--border-hi);background:var(--card2)}
+.hp-feat-em{font-size:18px;flex-shrink:0;margin-top:1px;line-height:1}
+.hp-feat-title{font-size:12px;font-weight:700;color:var(--white);margin-bottom:3px}
+.hp-feat-desc{font-size:11px;color:var(--sub);line-height:1.6}
+
+/* BOTTOM CTA SECTION */
+.hp-bottom-cta{
+  background:var(--bg2);border-top:1px solid var(--border);
+  padding:80px 24px;text-align:center;
+}
+.hp-bottom-cta-title{font-size:34px;font-weight:900;color:var(--white);letter-spacing:-1px;margin-bottom:12px}
+.hp-bottom-cta-sub{font-size:14px;color:var(--sub);margin-bottom:32px;line-height:1.7;max-width:420px;margin-left:auto;margin-right:auto}
+.hp-footer{
+  border-top:1px solid var(--border);padding:20px 28px;
+  display:flex;align-items:center;justify-content:space-between;
+  font-size:11px;color:var(--muted);flex-wrap:wrap;gap:8px;
+  font-family:var(--font-mono);
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════ HOMEPAGE ══════════════ -->
+<div id="homePage">
+
+  <!-- Nav -->
+  <nav class="hp-nav">
+    <div class="logo">
+      <svg class="logo-icon" width="32" height="32" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="7" fill="#222"/><rect x="0.5" y="0.5" width="31" height="31" rx="6.5" stroke="#3a3a3a"/><path d="M19.5 8.5C18.05 8.5 17 9.6 17 11C17 11.55 17.2 12.05 17.5 12.45L17.85 12.85L10.6 20.1L10.2 19.8C9.85 19.55 9.45 19.4 9 19.4C7.6 19.4 6.5 20.5 6.5 21.9C6.5 23.3 7.6 24.4 9 24.4C10.4 24.4 11.5 23.3 11.5 21.9C11.5 21.45 11.35 21.05 11.1 20.7L10.8 20.3L18.05 13.05L18.45 13.4C18.8 13.7 19.3 13.9 19.8 13.9C21.2 13.9 22.3 12.8 22.3 11.4C22.3 11 22.2 10.6 22 10.3L20.55 11.75L19.4 11.85L18.65 11.1L18.75 9.95L20.2 8.5C20 8.5 19.75 8.5 19.5 8.5Z" fill="#888"/></svg>
+      PushToApp<span class="logo-by">by @shikwonh</span>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <button class="hdr-nav-btn" onclick="showMyApps()">📦 My Apps <span class="hdr-apps-count" id="hpAppsCount" style="display:none"></span></button>
+      <button class="hp-cta-primary" style="padding:8px 20px;font-size:13px;border-radius:7px" onclick="startBuilder()">Start Building →</button>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hp-hero">
+    <div class="hp-badge">
+      <span class="hp-badge-dot"></span>
+      Free · No install · No account needed
+    </div>
+    <h1 class="hp-title">
+      Turn Any Website Into<br>
+      <span class="hp-title-grad">An Android App</span>
+    </h1>
+    <p class="hp-sub">
+      PushToApp wraps your website — or your entire project folder (HTML, CSS, JS, images, fonts) — into a real native Android app. Download the ZIP, push to GitHub, and get your APK in minutes. No coding required.
+    </p>
+    <div class="hp-cta-row">
+      <button class="hp-cta-primary" onclick="startBuilder()">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Start Building — It's Free
+      </button>
+      <button class="hp-cta-secondary" onclick="scrollToHow()">
+        How it works ↓
+      </button>
+    </div>
+
+    <div class="hp-divider" style="margin-top:56px"></div>
+    <div class="hp-stats">
+      <div class="hp-stat"><div class="hp-stat-num">100%</div><div class="hp-stat-lbl">Free Forever</div></div>
+      <div class="hp-stat"><div class="hp-stat-num">0</div><div class="hp-stat-lbl">No Account</div></div>
+      <div class="hp-stat"><div class="hp-stat-num">3–5m</div><div class="hp-stat-lbl">Build Time</div></div>
+      <div class="hp-stat"><div class="hp-stat-num">20+</div><div class="hp-stat-lbl">Features</div></div>
+    </div>
+  </section>
+
+  <!-- How it Works -->
+  <div style="border-top:1px solid var(--border)" id="howItWorks"></div>
+  <div class="hp-section">
+    <div class="hp-section-eyebrow">How it works</div>
+    <div class="hp-section-title">From Website to APK in 4 Steps</div>
+    <div class="hp-section-sub">No coding required. No Android Studio needed to start. Just fill a form, download, and build.</div>
+    <div class="hp-steps-grid">
+      <div class="hp-step-card">
+        <div class="hp-step-icon">🌐</div>
+        <div class="hp-step-num">01</div>
+        <div class="hp-step-title">Enter Your Website or Upload HTML</div>
+        <div class="hp-step-desc">Paste your website URL, or upload your entire project — HTML, CSS, JS, images, fonts, and more. All files get bundled into the app's assets.</div>
+        <span class="hp-step-tag">Step 1 · App Info</span>
+      </div>
+      <div class="hp-step-card">
+        <div class="hp-step-icon">🎨</div>
+        <div class="hp-step-num">02</div>
+        <div class="hp-step-title">Set Your Branding</div>
+        <div class="hp-step-desc">Upload your app icon (512×512 PNG) and pick your primary + accent colors for the splash screen and theme.</div>
+        <span class="hp-step-tag">Step 2 · Branding</span>
+      </div>
+      <div class="hp-step-card">
+        <div class="hp-step-icon">⚡</div>
+        <div class="hp-step-num">03</div>
+        <div class="hp-step-title">Toggle Features</div>
+        <div class="hp-step-desc">Enable things like Pull-to-Refresh, PIN Lock, Offline Fallback, File Upload, and more — all pre-coded, just toggle on.</div>
+        <span class="hp-step-tag">Step 3 · Features</span>
+      </div>
+      <div class="hp-step-card">
+        <div class="hp-step-icon">📦</div>
+        <div class="hp-step-num">04</div>
+        <div class="hp-step-title">Download & Build Your APK</div>
+        <div class="hp-step-desc">Download the Android project ZIP. Push it to a free GitHub repo — GitHub Actions builds the APK automatically in 3–5 minutes.</div>
+        <span class="hp-step-tag">Step 4 · Build</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Features -->
+  <div style="border-top:1px solid var(--border)"></div>
+  <div class="hp-section">
+    <div class="hp-section-eyebrow">What's included</div>
+    <div class="hp-section-title">Everything Your App Needs</div>
+    <div class="hp-section-sub">All features are pre-built and injected automatically into your Android project — zero extra configuration.</div>
+    <div class="hp-feat-grid">
+      <div class="hp-feat-card"><span class="hp-feat-em">✨</span><div><div class="hp-feat-title">Splash Screen</div><div class="hp-feat-desc">Animated launch screen with your icon and app name</div></div></div>
+      <div class="hp-feat-card"><span class="hp-feat-em">↻</span><div><div class="hp-feat-title">Pull-to-Refresh</div><div class="hp-feat-desc">Swipe down to reload — native Android feel</div></div></div>
+      <div class="hp-feat-card"><span class="hp-feat-em">◀</span><div><div class="hp-feat-title">Back Button</div><div class="hp-feat-desc">Hardware back navigates your web page history</div></div></div>
+      <div class="hp-feat-card"><span class="hp-feat-em">✈</span><div><div class="hp-feat-title">Offline Fallback</div><div class="hp-feat-desc">Friendly no-internet page instead of a broken screen</div></div></div>
+      <div class="hp-feat-card"><span class="hp-feat-em">🔒</span><div><div class="hp-feat-title">PIN / Biometric Lock</div><div class="hp-feat-desc">Require fingerprint or PIN to open the app</div></div></div>
+      <div class="hp-feat-card"><span class="hp-feat-em">📎</span><div><div class="hp-feat-title">File Upload Support</div><div class="hp-feat-desc">Enables &lt;input type=file&gt; on your website</div></div></div>
+      <div class="hp-feat-card"><span class="hp-feat-em">🛡</span><div><div class="hp-feat-title">Block Screenshots</div><div class="hp-feat-desc">Prevents screenshots and screen recording</div></div></div>
+      <div class="hp-feat-card"><span class="hp-feat-em">🔄</span><div><div class="hp-feat-title">App Update Check</div><div class="hp-feat-desc">Prompts users when a new version is available</div></div></div>
+      <div class="hp-feat-card"><span class="hp-feat-em">⚙</span><div><div class="hp-feat-title">Custom JS Injection</div><div class="hp-feat-desc">Run your own JavaScript after every page load</div></div></div>
+      <div class="hp-feat-card"><span class="hp-feat-em">🔐</span><div><div class="hp-feat-title">Force HTTPS Only</div><div class="hp-feat-desc">Blocks insecure HTTP requests in the WebView</div></div></div>
+      <div class="hp-feat-card"><span class="hp-feat-em">⛶</span><div><div class="hp-feat-title">Fullscreen Mode</div><div class="hp-feat-desc">Immersive experience — hides status & nav bars</div></div></div>
+      <div class="hp-feat-card"><span class="hp-feat-em">📁</span><div><div class="hp-feat-title">Multi-File Project Mode</div><div class="hp-feat-desc">Upload HTML, CSS, JS, images, fonts & more — entire projects bundled into app assets</div></div></div>
+    </div>
+  </div>
+
+  <!-- Bottom CTA -->
+  <div class="hp-bottom-cta">
+    <div class="hp-bottom-cta-title">Ready to build your app?</div>
+    <div class="hp-bottom-cta-sub">It's completely free. No account, no credit card, no installation. Just fill the form and get your APK.</div>
+    <button class="hp-cta-primary" onclick="startBuilder()">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Start Building Now — Free
+    </button>
+  </div>
+
+  <footer class="hp-footer">
+    <span>PushToApp · v2.0</span>
+    <span>No server · All processing happens in your browser</span>
+  </footer>
+
+</div><!-- /homePage -->
+
+<!-- ══════════════ BUILDER ══════════════ -->
+<div id="builderPage" style="display:none">
+<div class="hdr">
+  <div class="logo">
+    <!-- Realistic wrench + code icon -->
+    <svg class="logo-icon" width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="32" height="32" rx="7" fill="#222"/>
+      <rect x="0.5" y="0.5" width="31" height="31" rx="6.5" stroke="#3a3a3a"/>
+      <!-- Wrench body -->
+      <path d="M19.5 7.5C17.5 7.5 16 9 16 11C16 11.5 16.1 11.95 16.3 12.35L9.5 19.15C9.1 18.95 8.6 18.85 8.1 18.85C6.1 18.85 4.5 20.4 4.5 22.4C4.5 24.4 6.1 25.95 8.1 25.95C10.1 25.95 11.7 24.4 11.7 22.4C11.7 21.9 11.6 21.4 11.35 20.95L18.1 14.2C18.55 14.4 19.05 14.5 19.5 14.5C21.5 14.5 23 13 23 11C23 10.4 22.85 9.85 22.55 9.4L20.4 11.55L19.15 11.55L18.45 10.85L18.45 9.6L20.6 7.45C20.25 7.5 19.9 7.5 19.5 7.5Z" fill="#555"/>
+      <path d="M19.5 8.5C18.05 8.5 17 9.6 17 11C17 11.55 17.2 12.05 17.5 12.45L17.85 12.85L10.6 20.1L10.2 19.8C9.85 19.55 9.45 19.4 9 19.4C7.6 19.4 6.5 20.5 6.5 21.9C6.5 23.3 7.6 24.4 9 24.4C10.4 24.4 11.5 23.3 11.5 21.9C11.5 21.45 11.35 21.05 11.1 20.7L10.8 20.3L18.05 13.05L18.45 13.4C18.8 13.7 19.3 13.9 19.8 13.9C21.2 13.9 22.3 12.8 22.3 11.4C22.3 11 22.2 10.6 22 10.3L20.55 11.75L19.4 11.85L18.65 11.1L18.75 9.95L20.2 8.5C20 8.5 19.75 8.5 19.5 8.5Z" fill="#888"/>
+      <!-- Code brackets on the right side -->
+      <path d="M24 17L27 20L24 23" stroke="#555" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M21 17L18 20L21 23" stroke="#444" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    PushToApp<span class="logo-by">by @shikwonh</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <button class="hdr-nav-btn" id="myAppsNavBtn" onclick="showMyApps()">📦 My Apps <span class="hdr-apps-count" id="hdrAppsCount" style="display:none"></span></button>
+    <div class="hdr-badge">v2.0 · No Install</div>
+  </div>
+</div>
+
+<!-- STEP BAR -->
+<div class="stepbar">
+  <div class="stepbar-inner" id="stepbarInner">
+    <div class="sb-step active" id="sb1">
+      <div class="sb-circle"><span id="sn1">1</span></div>
+      <div class="sb-text">App Info</div>
+      <div class="sb-line"></div>
+    </div>
+    <div class="sb-step" id="sb2">
+      <div class="sb-circle"><span id="sn2">2</span></div>
+      <div class="sb-text">Branding</div>
+      <div class="sb-line"></div>
+    </div>
+    <div class="sb-step" id="sb3">
+      <div class="sb-circle"><span id="sn3">3</span></div>
+      <div class="sb-text">Features</div>
+      <div class="sb-line"></div>
+    </div>
+    <div class="sb-step" id="sb4">
+      <div class="sb-circle"><span id="sn4">4</span></div>
+      <div class="sb-text">Build</div>
+    </div>
+  </div>
+</div>
+
+<!-- LAYOUT -->
+<div class="layout">
+<div><!-- LEFT COL -->
+
+<!-- ══ STEP 1 ══ -->
+<div class="step-panel active" id="panel1">
+  <div class="sec-head">
+    <div class="sec-eyebrow">Step 1 of 4</div>
+    <div class="sec-title">App Information</div>
+    <div class="sec-sub">Set your website URL and app identity — these get embedded directly into the Android project.</div>
+  </div>
+  <div class="card">
+    <div class="card-head">
+      <div class="c-icon">🌐</div>
+      <div><div class="c-title">Website & Identity</div><div class="c-sub">The website your app wraps around</div></div>
+    </div>
+    <div class="g2">
+      <div class="field s2">
+        <label>Source Type</label>
+        <div class="mode-toggle">
+          <button class="mtab active" id="modeUrlBtn" onclick="setSourceMode('url')">🌐 Website URL</button>
+          <button class="mtab" id="modeHtmlBtn" onclick="setSourceMode('html')">📁 Upload Project Files</button>
+        </div>
+      </div>
+      <div class="field s2" id="urlField">
+        <label>Website URL <span class="req">*</span></label>
+        <input type="url" id="url" placeholder="https://yourwebsite.com" oninput="updatePkg();updatePreview()">
+      </div>
+      <div class="field s2" id="htmlField" style="display:none">
+        <label>Upload Project Files <span class="req">*</span></label>
+        <div class="html-drop" id="multiFileDrop" onclick="document.getElementById('htmlFile').click()">
+          <input type="file" id="htmlFile" accept=".html,.htm,.css,.js,.mjs,.ts,.jsx,.tsx,.json,.xml,.svg,.png,.jpg,.jpeg,.gif,.webp,.ico,.woff,.woff2,.ttf,.otf,.eot,.txt,.md,.php,.py,.rb,.java,.kt,.swift,.csv,.pdf" multiple onchange="handleMultiFiles(this.files)" style="display:none">
+          <div class="html-ready" id="htmlReady" style="display:none;align-items:flex-start;gap:10px;flex-direction:column">
+            <div style="display:flex;align-items:center;gap:10px;width:100%">
+              <span style="font-size:22px">📦</span>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:12px;font-weight:700;color:var(--white)" id="htmlFileName">—</div>
+                <div style="font-size:10px;color:var(--sub);margin-top:2px" id="fileCountLabel">files loaded</div>
+              </div>
+              <button onclick="event.stopPropagation();document.getElementById('htmlFile').click()" style="font-size:10px;padding:4px 10px;background:var(--surface);border:1px solid var(--border-hi);border-radius:6px;color:var(--sub);cursor:pointer;font-family:var(--font-body);white-space:nowrap">+ Add More</button>
+            </div>
+            <div id="fileList" style="width:100%;display:flex;flex-direction:column;gap:3px;max-height:120px;overflow-y:auto"></div>
+          </div>
+          <div id="htmlDropHint">
+            <div class="drop-hint" style="font-size:13px">📂 <strong>Click to upload files</strong></div>
+            <div class="drop-note" style="margin-top:6px">HTML · CSS · JS · Images · Fonts · JSON · and more</div>
+            <div class="drop-note" style="margin-top:3px;color:var(--muted)">Select multiple files at once · index.html becomes the entry point</div>
+          </div>
+        </div>
+        <!-- entry point selector shown when multiple html files uploaded -->
+        <div id="entryPointRow" style="display:none;margin-top:8px">
+          <label style="margin-bottom:5px;display:block">Entry Point (main HTML file)</label>
+          <select id="entryPointSelect" style="width:100%"></select>
+        </div>
+      </div>
+      <div class="field">
+        <label>App Name <span class="req">*</span></label>
+        <input type="text" id="appName" placeholder="My App" oninput="updatePkg();updatePreview()">
+      </div>
+      <div class="field">
+        <label>Version</label>
+        <input type="text" id="version" value="1.0.0" placeholder="1.0.0" oninput="updateVersionJsonPreview()">
+      </div>
+      <div class="field s2">
+        <label>Short Description</label>
+        <textarea id="desc" placeholder="What does your app do? (optional)"></textarea>
+      </div>
+      <div class="field">
+        <label>Developer / Company</label>
+        <input type="text" id="devName" placeholder="Your Name">
+      </div>
+      <div class="field">
+        <label>Contact Email</label>
+        <input type="email" id="devEmail" placeholder="you@example.com">
+      </div>
+      <div class="field s2">
+        <label>Package ID <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)">(auto)</span></label>
+        <div class="pkg-row" id="pkgPreview">com.<span class="hi">example</span>.<span class="hi">myapp</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="notice">ℹ️ Your website is wrapped in a native Android WebView — it behaves like a real app with offline support, back navigation, and more.</div>
+  <div class="btn-row"><span></span><button class="btn-next" onclick="nextStep()">Branding →</button></div>
+</div>
+
+<!-- ══ STEP 2 ══ -->
+<div class="step-panel" id="panel2">
+  <div class="sec-head">
+    <div class="sec-eyebrow">Step 2 of 4</div>
+    <div class="sec-title">Branding</div>
+    <div class="sec-sub">Set your app icon and color scheme. These are embedded directly into the APK.</div>
+  </div>
+  <div class="card">
+    <div class="card-head">
+      <div class="c-icon">🖼</div>
+      <div><div class="c-title">App Icon</div><div class="c-sub">PNG, 512×512 px recommended — auto-scaled to all densities</div></div>
+    </div>
+    <div class="icon-drop" id="iconDrop" onclick="document.getElementById('iconFile').click()">
+      <input type="file" id="iconFile" accept="image/*" onchange="handleIcon(this.files[0])" style="display:none">
+      <img class="icon-prev-img" id="iconPrev" alt="icon">
+      <div class="drop-hint">
+        <div>📂 <strong>Click to upload</strong> your icon</div>
+        <div class="drop-note">PNG · 512×512 recommended · max 2MB</div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-head">
+      <div class="c-icon">🎨</div>
+      <div><div class="c-title">Theme Colors</div><div class="c-sub">Used on splash screen, status bar, and accent elements</div></div>
+    </div>
+    <div class="g2">
+      <div class="field">
+        <label>Primary (Splash Background)</label>
+        <div class="cpair">
+          <input type="color" id="primaryPick" value="#111111" oninput="syncColor('primaryPick','primaryHex');updatePreview()">
+          <input type="text" id="primaryHex" value="#111111" maxlength="7" oninput="syncColor('primaryHex','primaryPick');updatePreview()">
+        </div>
+        <div class="chips" id="primaryChips"></div>
+      </div>
+      <div class="field">
+        <label>Accent (Buttons & Links)</label>
+        <div class="cpair">
+          <input type="color" id="accentPick" value="#ffffff" oninput="syncColor('accentPick','accentHex');updatePreview()">
+          <input type="text" id="accentHex" value="#ffffff" maxlength="7" oninput="syncColor('accentHex','accentPick');updatePreview()">
+        </div>
+        <div class="chips" id="accentChips"></div>
+      </div>
+    </div>
+  </div>
+  <div class="btn-row">
+    <button class="btn-back" onclick="prevStep()">← Back</button>
+    <button class="btn-next" onclick="nextStep()">Features →</button>
+  </div>
+</div>
+
+<!-- ══ STEP 3 ══ -->
+<div class="step-panel" id="panel3">
+  <div class="sec-head">
+    <div class="sec-eyebrow">Step 3 of 4</div>
+    <div class="sec-title">App Features</div>
+    <div class="sec-sub">Toggle the features you need. All are pre-coded and injected automatically into your project.</div>
+  </div>
+
+  <div class="fgroup">
+    <div class="fgroup-label">UI &amp; Experience</div>
+    <div class="fgrid">
+      <div class="feat on" id="f-splash" onclick="toggleFeat('splash')">
+        <span class="feat-em">✨</span>
+        <div class="feat-body"><div class="feat-name">Splash Screen</div><div class="feat-desc">Animated launch screen with icon &amp; name</div></div>
+        <div class="chk">✓</div>
+      </div>
+      <div class="feat" id="f-fullscreen" onclick="toggleFeat('fullscreen')">
+        <span class="feat-em">⛶</span>
+        <div class="feat-body"><div class="feat-name">Fullscreen Mode</div><div class="feat-desc">Hides status bar &amp; nav bar (immersive)</div></div>
+        <div class="chk">✓</div>
+      </div>
+      <div class="feat on" id="f-swiperefresh" onclick="toggleFeat('swiperefresh')">
+        <span class="feat-em">↻</span>
+        <div class="feat-body"><div class="feat-name">Pull-to-Refresh</div><div class="feat-desc">Swipe down to reload the page</div></div>
+        <div class="chk">✓</div>
+      </div>
+      <div class="feat" id="f-loadingbar" onclick="toggleFeat('loadingbar')">
+        <span class="feat-em">⏳</span>
+        <div class="feat-body"><div class="feat-name">Loading Progress Bar</div><div class="feat-desc">Thin bar shows page load progress</div><span class="ftag">NEW</span></div>
+        <div class="chk">✓</div>
+      </div>
+      <div class="feat" id="f-portrait" onclick="toggleFeat('portrait')">
+        <span class="feat-em">📐</span>
+        <div class="feat-body"><div class="feat-name">Force Portrait Mode</div><div class="feat-desc">Locks app to vertical orientation</div></div>
+        <div class="chk">✓</div>
+      </div>
+      <div class="feat" id="f-wakelock" onclick="toggleFeat('wakelock')">
+        <span class="feat-em">💡</span>
+        <div class="feat-body"><div class="feat-name">Keep Screen On</div><div class="feat-desc">Prevents sleep while app is open</div></div>
+        <div class="chk">✓</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="fgroup">
+    <div class="fgroup-label">Navigation</div>
+    <div class="fgrid">
+      <div class="feat on" id="f-backbutton" onclick="toggleFeat('backbutton')">
+        <span class="feat-em">◀</span>
+        <div class="feat-body"><div class="feat-name">Back Button</div><div class="feat-desc">Android back navigates page history</div></div>
+        <div class="chk">✓</div>
+      </div>
+      <div class="feat" id="f-filechooser" onclick="toggleFeat('filechooser')">
+        <span class="feat-em">📎</span>
+        <div class="feat-body"><div class="feat-name">File Upload Support</div><div class="feat-desc">Enables &lt;input type=file&gt; on your site</div></div>
+        <div class="chk">✓</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="fgroup">
+    <div class="fgroup-label">Security</div>
+    <div class="fgrid">
+      <div class="feat" id="f-screenshot" onclick="toggleFeat('screenshot')">
+        <span class="feat-em">🛡</span>
+        <div class="feat-body"><div class="feat-name">Block Screenshots</div><div class="feat-desc">Prevents screenshots &amp; screen recording</div></div>
+        <div class="chk">✓</div>
+      </div>
+      <div class="feat" id="f-credentials" onclick="toggleFeat('credentials')">
+        <span class="feat-em">🔑</span>
+        <div class="feat-body"><div class="feat-name">Auto-Save Login</div><div class="feat-desc">Remembers email &amp; password between sessions</div></div>
+        <div class="chk">✓</div>
+      </div>
+      <div class="feat" id="f-pinlock" onclick="toggleFeat('pinlock')">
+        <span class="feat-em">🔒</span>
+        <div class="feat-body"><div class="feat-name">PIN / Biometric Lock</div><div class="feat-desc">Requires fingerprint or PIN to open app</div><span class="ftag">NEW</span></div>
+        <div class="chk">✓</div>
+      </div>
+      <div class="feat" id="f-rootexit" onclick="toggleFeat('rootexit')">
+        <span class="feat-em">☠️</span>
+        <div class="feat-body"><div class="feat-name">Block Rooted Devices</div><div class="feat-desc">Closes app if device is rooted or tampered</div><span class="ftag">NEW</span></div>
+        <div class="chk">✓</div>
+      </div>
+      <div class="feat" id="f-emublock" onclick="toggleFeat('emublock')">
+        <span class="feat-em">🖥️</span>
+        <div class="feat-body"><div class="feat-name">Block Emulators</div><div class="feat-desc">Prevents app from running on Android emulators</div><span class="ftag">NEW</span></div>
+        <div class="chk">✓</div>
+      </div>
+      <div class="feat" id="f-cleardata" onclick="toggleFeat('cleardata')">
+        <span class="feat-em">🧹</span>
+        <div class="feat-body"><div class="feat-name">Clear Data on Exit</div><div class="feat-desc">Wipes cookies &amp; cache when app is closed</div><span class="ftag">NEW</span></div>
+        <div class="chk">✓</div>
+      </div>
+      <div class="feat" id="f-sslonly" onclick="toggleFeat('sslonly')">
+        <span class="feat-em">🔐</span>
+        <div class="feat-body"><div class="feat-name">Force HTTPS Only</div><div class="feat-desc">Blocks insecure HTTP requests in the WebView</div><span class="ftag">NEW</span></div>
+        <div class="chk">✓</div>
+      </div>
+      <div class="feat" id="f-devtools" onclick="toggleFeat('devtools')">
+        <span class="feat-em">🚫</span>
+        <div class="feat-body"><div class="feat-name">Disable WebView Debug</div><div class="feat-desc">Prevents Chrome DevTools from inspecting the app</div><span class="ftag">NEW</span></div>
+        <div class="chk">✓</div>
+      </div>
+      <div class="feat" id="f-tapjack" onclick="toggleFeat('tapjack')">
+        <span class="feat-em">👁</span>
+        <div class="feat-body"><div class="feat-name">Anti-Tapjacking</div><div class="feat-desc">Blocks overlay attacks that hijack user taps</div><span class="ftag">NEW</span></div>
+        <div class="chk">✓</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="fgroup">
+    <div class="fgroup-label">Network &amp; Permissions</div>
+    <div class="fgrid">
+      <div class="feat" id="f-offline" onclick="toggleFeat('offline')">
+        <span class="feat-em">✈</span>
+        <div class="feat-body"><div class="feat-name">Offline Fallback</div><div class="feat-desc">Shows a friendly no-internet page with your app name</div></div>
+        <div class="chk">✓</div>
+      </div>
+      <div class="feat" id="f-updatecheck" onclick="toggleFeat('updatecheck')">
+        <span class="feat-em">🔄</span>
+        <div class="feat-body">
+          <div class="feat-name">App Update Check</div>
+          <div class="feat-desc">Prompts users to update when new version is available</div>
+          <span class="ftag">NEW</span>
+          <div class="feat-extra" id="fe-updatecheck" onclick="event.stopPropagation()">
+            <input type="url" id="updateCheckUrl" placeholder="https://raw.githubusercontent.com/you/repo/main/version.json" style="font-size:11px;padding:7px 9px" onclick="event.stopPropagation()" oninput="event.stopPropagation()">
+
+            <!-- AUTO GENERATED JSON PREVIEW -->
+            <div style="margin-top:10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px" onclick="event.stopPropagation()">
+              <div style="font-size:10px;font-family:var(--font-mono);color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px">📄 Your version.json (auto-generated)</div>
+              <div style="font-family:var(--font-mono);font-size:10px;color:#7ec8a0;word-break:break-all;line-height:1.7" id="versionJsonPreview">{"version":"1.0.0","url":"https://play.google.com/store/apps/details?id=com.example.myapp"}</div>
+              <button onclick="event.stopPropagation();copyVersionJson()" style="margin-top:8px;padding:5px 12px;background:var(--surface);border:1px solid var(--border-hi);border-radius:4px;font-size:10px;font-weight:600;color:var(--sub);cursor:pointer;font-family:var(--font-body)" id="copyJsonBtn">📋 Copy JSON</button>
+            </div>
+
+            <!-- STEP BY STEP GUIDE -->
+            <div style="margin-top:10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:12px" onclick="event.stopPropagation()">
+              <div style="font-size:10px;font-weight:700;color:var(--white);margin-bottom:10px">🐙 How to host on GitHub (Free)</div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+
+                <div style="display:flex;gap:8px;align-items:flex-start">
+                  <div style="width:18px;height:18px;border-radius:50%;background:var(--surface);border:1px solid var(--border-hi);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--sub);flex-shrink:0;margin-top:1px">1</div>
+                  <div style="font-size:10px;color:var(--sub);line-height:1.6">Go to <span style="color:var(--accent);font-family:var(--font-mono)">github.com</span> → Sign up free if wala ka pa</div>
+                </div>
+
+                <div style="display:flex;gap:8px;align-items:flex-start">
+                  <div style="width:18px;height:18px;border-radius:50%;background:var(--surface);border:1px solid var(--border-hi);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--sub);flex-shrink:0;margin-top:1px">2</div>
+                  <div style="font-size:10px;color:var(--sub);line-height:1.6">Click <strong style="color:var(--text)">+</strong> → <strong style="color:var(--text)">New repository</strong> → name it anything → set <strong style="color:var(--text)">Public</strong> → check <strong style="color:var(--text)">Add README</strong> → <strong style="color:var(--text)">Create repository</strong></div>
+                </div>
+
+                <div style="display:flex;gap:8px;align-items:flex-start">
+                  <div style="width:18px;height:18px;border-radius:50%;background:var(--surface);border:1px solid var(--border-hi);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--sub);flex-shrink:0;margin-top:1px">3</div>
+                  <div style="font-size:10px;color:var(--sub);line-height:1.6">Click <strong style="color:var(--text)">Add file</strong> → <strong style="color:var(--text)">Create new file</strong> → filename: <span style="font-family:var(--font-mono);color:var(--accent)">version.json</span></div>
+                </div>
+
+                <div style="display:flex;gap:8px;align-items:flex-start">
+                  <div style="width:18px;height:18px;border-radius:50%;background:var(--surface);border:1px solid var(--border-hi);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--sub);flex-shrink:0;margin-top:1px">4</div>
+                  <div style="font-size:10px;color:var(--sub);line-height:1.6">I-paste yung JSON sa taas (click <strong style="color:var(--text)">Copy JSON</strong>) → click <strong style="color:var(--text)">Commit changes</strong> twice</div>
+                </div>
+
+                <div style="display:flex;gap:8px;align-items:flex-start">
+                  <div style="width:18px;height:18px;border-radius:50%;background:var(--surface);border:1px solid var(--border-hi);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--sub);flex-shrink:0;margin-top:1px">5</div>
+                  <div style="font-size:10px;color:var(--sub);line-height:1.6">Click <span style="font-family:var(--font-mono);color:var(--accent)">version.json</span> → click <strong style="color:var(--text)">Raw</strong> button → copy the URL from browser bar</div>
+                </div>
+
+                <div style="display:flex;gap:8px;align-items:flex-start">
+                  <div style="width:18px;height:18px;border-radius:50%;background:var(--surface);border:1px solid var(--border-hi);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--sub);flex-shrink:0;margin-top:1px">6</div>
+                  <div style="font-size:10px;color:var(--sub);line-height:1.6">Paste that Raw URL in the field above ↑ — done! 🎉<br><span style="color:var(--muted)">Looks like: raw.githubusercontent.com/yourname/repo/main/version.json</span></div>
+                </div>
+
+                <div style="margin-top:4px;padding:8px;background:var(--surface);border-radius:5px;border-left:2px solid var(--border-hi)">
+                  <div style="font-size:10px;color:var(--muted);line-height:1.6">💡 <strong style="color:var(--sub)">Para mag-update ng version:</strong> Bumalik sa GitHub → click version.json → click ✏️ pencil → baguhin ang version number → Commit. Automatic na mag-aappear ang update prompt sa users!</div>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+        </div>
+        <div class="chk">✓</div>
+      </div>
+      <div class="feat" id="f-location" onclick="toggleFeat('location')">
+        <span class="feat-em">📍</span>
+        <div class="feat-body"><div class="feat-name">Location Access</div><div class="feat-desc">Allows website to request GPS</div><span class="ftag">NEW</span></div>
+        <div class="chk">✓</div>
+      </div>
+      <div class="feat" id="f-camera" onclick="toggleFeat('camera')">
+        <span class="feat-em">📷</span>
+        <div class="feat-body"><div class="feat-name">Camera &amp; Microphone</div><div class="feat-desc">For video calls, QR scanners, etc.</div><span class="ftag">NEW</span></div>
+        <div class="chk">✓</div>
+      </div>
+      <div class="feat" id="f-useragent" onclick="toggleFeat('useragent')">
+        <span class="feat-em">🌐</span>
+        <div class="feat-body">
+          <div class="feat-name">Custom User Agent</div>
+          <div class="feat-desc">Override the browser identity string</div>
+          <span class="ftag">NEW</span>
+          <div class="feat-extra" id="fe-useragent" onclick="event.stopPropagation()">
+            <input type="text" id="uaString" placeholder="e.g. Mozilla/5.0 (Android)" style="font-size:11px;padding:7px 9px" onclick="event.stopPropagation()">
+          </div>
+        </div>
+        <div class="chk">✓</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="fgroup">
+    <div class="fgroup-label">Analytics &amp; Advanced</div>
+    <div class="fgrid">
+      <div class="feat" id="f-tracking" onclick="toggleFeat('tracking')">
+        <span class="feat-em">📈</span>
+        <div class="feat-body"><div class="feat-name">App Open Tracking</div><div class="feat-desc">Logs total opens, first install &amp; last open</div></div>
+        <div class="chk">✓</div>
+      </div>
+      <div class="feat" id="f-customjs" onclick="toggleFeat('customjs')">
+        <span class="feat-em">⚙</span>
+        <div class="feat-body">
+          <div class="feat-name">Custom JS Injection</div>
+          <div class="feat-desc">Runs your own JS after every page load</div>
+          <span class="ftag">NEW</span>
+          <div class="feat-extra" id="fe-customjs" onclick="event.stopPropagation()">
+            <textarea id="customJsCode" placeholder="// runs after every page load&#10;console.log('loaded');" style="font-family:var(--font-mono);font-size:10px;min-height:72px;padding:7px 9px" onclick="event.stopPropagation()"></textarea>
+          </div>
+        </div>
+        <div class="chk">✓</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-back" onclick="prevStep()">← Back</button>
+    <button class="btn-next" onclick="nextStep()">Review & Build →</button>
+  </div>
+</div>
+
+<!-- ══ STEP 4 ══ -->
+<div class="step-panel" id="panel4">
+  <div class="sec-head">
+    <div class="sec-eyebrow">Step 4 of 4</div>
+    <div class="sec-title">Review &amp; Build</div>
+    <div class="sec-sub">Confirm your settings and generate the Android project ZIP file.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div class="c-icon">📋</div>
+      <div><div class="c-title">Project Summary</div><div class="c-sub">Double-check before generating</div></div>
+    </div>
+    <div class="sum-grid" id="sumGrid"></div>
+    <div class="field">
+      <label>Active Features</label>
+      <div class="feat-pills" id="featPills"></div>
+    </div>
+  </div>
+
+  <div class="notice">🚀 Your ZIP will download instantly. Push it to a public GitHub repo and the APK builds automatically in ~3–5 min — completely free.</div>
+
+  <button class="btn-gen" id="genBtn" onclick="generateProject()">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Generate Android Project ZIP
+  </button>
+  <div class="prog-wrap" id="progWrap">
+    <div class="prog-top"><span id="progLabel">Starting...</span><span id="progPct">0%</span></div>
+    <div class="prog-bar"><div class="prog-fill" id="progFill"></div></div>
+  </div>
+
+  <!-- OUTPUT -->
+  <div class="output-area" id="outputArea">
+    <div class="success-banner">
+      <div class="s-icon">✅</div>
+      <div class="s-title">Project Generated!</div>
+      <div class="s-sub">Your Android project ZIP has been downloaded. Follow the steps below to get your APK.</div>
+      <button class="dl-btn" onclick="triggerDownload()">⬇ Download ZIP Again</button>
+      <button class="dl-btn" onclick="generateIos()" style="background:var(--surface);color:var(--text);border:1px solid var(--border-hi);margin-left:8px">🍎 Download iOS / PWA</button>
+      <br>
+      <button class="btn-done" onclick="goHome()">✓ Done — Start New App</button>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div class="c-icon">🔨</div>
+        <div><div class="c-title">How to Build Your APK</div><div class="c-sub">Two methods — GitHub Actions is easiest</div></div>
+      </div>
+      <div class="tab-row">
+        <button class="tab active" onclick="switchTab(this,'gh')">GitHub Actions (Free)</button>
+        <button class="tab" onclick="switchTab(this,'as')">Android Studio</button>
+      </div>
+
+      <div class="path show" id="path-gh">
+        <div class="slist">
+          <div class="sli"><div class="sli-spine"><div class="sli-dot">1</div><div class="sli-conn"></div></div><div class="sli-body"><div class="sli-h">Extract the ZIP</div><div class="sli-p">Unzip the downloaded file. You'll see folders like <code>app/</code>, <code>gradle/</code>, and <code>.github/</code>.</div></div></div>
+          <div class="sli"><div class="sli-spine"><div class="sli-dot">2</div><div class="sli-conn"></div></div><div class="sli-body"><div class="sli-h">Create a GitHub Repository</div><div class="sli-p">Go to <a href="https://github.com/new" target="_blank">github.com/new</a> → create a <strong>public</strong> repo (public = free Actions minutes)</div></div></div>
+          <div class="sli"><div class="sli-spine"><div class="sli-dot">3</div><div class="sli-conn"></div></div><div class="sli-body"><div class="sli-h">Push files to the ROOT of your repo</div><div class="sli-p">⚠️ Upload the <strong>contents</strong> of the extracted folder — not the folder itself.</div><div class="sli-box">✅ repo root should contain: gradlew · build.gradle · app/ · .github/ · gradle/</div></div></div>
+          <div class="sli"><div class="sli-spine"><div class="sli-dot">4</div><div class="sli-conn"></div></div><div class="sli-body"><div class="sli-h">Wait 3–5 minutes</div><div class="sli-p">Go to the <strong>Actions</strong> tab in your repo. The "Build APK" workflow runs automatically and installs all required SDK tools.</div></div></div>
+          <div class="sli"><div class="sli-spine"><div class="sli-dot">5</div><div class="sli-conn"></div></div><div class="sli-body"><div class="sli-h">Download your APK</div><div class="sli-p">Click the completed workflow run → scroll to <strong>Artifacts</strong> → download your APK. Share via Google Drive!</div></div></div>
+        </div>
+      </div>
+
+      <div class="path" id="path-as">
+        <div class="slist">
+          <div class="sli"><div class="sli-spine"><div class="sli-dot">1</div><div class="sli-conn"></div></div><div class="sli-body"><div class="sli-h">Install Android Studio</div><div class="sli-p">Download from <a href="https://developer.android.com/studio" target="_blank">developer.android.com/studio</a> (free, ~1 GB)</div></div></div>
+          <div class="sli"><div class="sli-spine"><div class="sli-dot">2</div><div class="sli-conn"></div></div><div class="sli-body"><div class="sli-h">Open the Project</div><div class="sli-p">File → Open → select the extracted folder</div></div></div>
+          <div class="sli"><div class="sli-spine"><div class="sli-dot">3</div><div class="sli-conn"></div></div><div class="sli-body"><div class="sli-h">Build APK</div><div class="sli-p">Menu: <code>Build → Build Bundle(s) / APK(s) → Build APK(s)</code></div></div></div>
+          <div class="sli"><div class="sli-spine"><div class="sli-dot">4</div><div class="sli-conn"></div></div><div class="sli-body"><div class="sli-h">Find your APK</div><div class="sli-p">Located at: <code>app/build/outputs/apk/debug/app-debug.apk</code></div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-back" onclick="prevStep()">← Back</button>
+    <span></span>
+  </div>
+</div>
+
+</div><!-- end left col -->
+
+<!-- PHONE PREVIEW -->
+<div class="preview-col">
+  <div class="prev-sticky">
+    <div class="prev-lbl">Live Preview</div>
+    <div class="phone-wrap">
+      <div class="phone-notch"></div>
+      <div class="phone-cam"></div>
+      <div class="phone-vol2"></div>
+      <div class="phone-shell">
+        <div class="phone-screen" id="phoneScreen">
+
+          <!-- ① HOME SCREEN (default) -->
+          <div class="home-view show" id="homeView">
+            <div class="home-statusbar">
+              <span class="home-time" id="homeTime">9:41</span>
+              <span class="home-icons-wrap">
+                <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><rect x="0" y="2" width="2" height="6" rx="0.5" fill="currentColor" opacity="0.4"/><rect x="2.5" y="1.5" width="2" height="6.5" rx="0.5" fill="currentColor" opacity="0.6"/><rect x="5" y="0.5" width="2" height="7.5" rx="0.5" fill="currentColor" opacity="0.8"/><rect x="7.5" y="0" width="2" height="8" rx="0.5" fill="currentColor"/></svg>
+                <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M5 1C6.8 1 8.4 1.7 9.5 2.8L10 2.3C8.8 1 6.5 0 5 0C3.5 0 1.2 1 0 2.3L0.5 2.8C1.6 1.7 3.2 1 5 1Z" fill="currentColor" opacity="0.4"/><path d="M5 3C6.2 3 7.2 3.5 7.9 4.2L8.5 3.6C7.6 2.8 6.4 2.3 5 2.3C3.6 2.3 2.4 2.8 1.5 3.6L2.1 4.2C2.8 3.5 3.8 3 5 3Z" fill="currentColor" opacity="0.7"/><circle cx="5" cy="6" r="1.2" fill="currentColor"/></svg>
+                🔋
+              </span>
+            </div>
+            <div class="home-wallpaper" id="homeWallpaper">
+              <!-- Only user's app icon -->
+              <div class="home-app-icon" onclick="launchApp()" title="Tap to open app">
+                <div class="home-icon-img" id="homeIconEl" style="background:var(--primary-color,#333)">
+                  <img id="homeIconImg" alt="">
+                  <svg id="homeIconSvg" width="28" height="28" viewBox="0 0 28 28" fill="none">
+                    <path d="M14 4L18 10H10L14 4Z" fill="rgba(255,255,255,0.7)"/>
+                    <rect x="8" y="11" width="12" height="11" rx="2" fill="rgba(255,255,255,0.5)"/>
+                    <rect x="10" y="14" width="8" height="1.5" rx="0.75" fill="rgba(255,255,255,0.8)"/>
+                    <rect x="10" y="17" width="5" height="1.5" rx="0.75" fill="rgba(255,255,255,0.6)"/>
+                  </svg>
+                </div>
+                <div class="home-icon-lbl" id="homeLabel">My App</div>
+              </div>
+            </div>
+            <!-- tap hint -->
+            <div class="tap-hint" id="tapHint">
+              <div class="tap-hint-pill">👆 Tap your app icon</div>
+            </div>
+          </div>
+
+          <!-- ② SPLASH SCREEN -->
+          <div class="splash-view" id="splashView">
+            <div class="splash-icon-wrap" id="splashIconWrap">
+              <img id="splashIconImg" alt="">
+              <svg id="splashIconSvg" width="44" height="44" viewBox="0 0 44 44" fill="none">
+                <rect width="44" height="44" rx="11" fill="rgba(255,255,255,0.15)"/>
+                <path d="M22 10L27 18H17L22 10Z" fill="rgba(255,255,255,0.7)"/>
+                <rect x="13" y="20" width="18" height="15" rx="2.5" fill="rgba(255,255,255,0.5)"/>
+                <rect x="16" y="24" width="12" height="2" rx="1" fill="rgba(255,255,255,0.8)"/>
+                <rect x="16" y="28" width="8" height="2" rx="1" fill="rgba(255,255,255,0.6)"/>
+              </svg>
+            </div>
+            <div class="splash-name" id="splashNameText">My App</div>
+            <div class="splash-tagline" id="splashTagline">Loading...</div>
+            <div class="splash-dots"><div class="sdot"></div><div class="sdot"></div><div class="sdot"></div></div>
+          </div>
+
+          <!-- ③ WEB VIEW -->
+          <div class="web-view" id="webPreviewView">
+            <div class="web-statusbar">
+              <span id="webTime">9:41</span>
+              <span style="font-size:8px">▐▌ WiFi 🔋</span>
+            </div>
+            <div class="web-urlbar">
+              <div class="web-urlbar-dot"></div>
+              <div class="web-urlbar-text" id="webUrlBarText">enter a URL above</div>
+            </div>
+            <div class="web-iframe-wrap" id="webIframeWrap">
+              <div class="web-no-preview" id="webNoPreview">
+                <div class="web-no-preview-icon">🌐</div>
+                <div class="web-no-preview-text">Enter your website URL<br>to see a preview here</div>
+              </div>
+              <iframe id="webPreviewIframe" style="display:none" sandbox="allow-scripts allow-same-origin" title="preview"></iframe>
+            </div>
+            <!-- Android nav bar -->
+            <div class="web-navbar">
+              <div class="nav-btn" onclick="goHomeScreen()" title="Home">
+                <svg viewBox="0 0 14 14" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M1 6L7 1L13 6V13H9V9H5V13H1V6Z"/></svg>
+              </div>
+              <div class="nav-btn" onclick="goHomeScreen()" title="Back">
+                <svg viewBox="0 0 14 14" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="10" height="10" rx="2"/></svg>
+              </div>
+              <div class="nav-btn" onclick="goHomeScreen()" title="Recents">
+                <svg viewBox="0 0 14 14" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.4" stroke-linecap="round"><path d="M3 4L7 1L11 4M3 8L7 5L11 8M3 12L7 9L11 12"/></svg>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /phone-screen -->
+      </div><!-- /phone-shell -->
+    </div><!-- /phone-wrap -->
+    <div class="prev-hint" id="prevHint">Tap the app icon<br>to preview the launch</div>
+  </div>
+</div>
+
+</div><!-- end layout -->
+
+<!-- Builder Footer -->
+<footer style="border-top:1px solid var(--border);padding:24px 32px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;background:var(--bg2)">
+  <div style="display:flex;align-items:center;gap:10px">
+    <div class="logo" style="font-size:15px">
+      <svg width="26" height="26" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="7" fill="#1c1c21"/><rect x="0.5" y="0.5" width="31" height="31" rx="6.5" stroke="var(--border-hi)"/><path d="M19.5 8.5C18.05 8.5 17 9.6 17 11C17 11.55 17.2 12.05 17.5 12.45L17.85 12.85L10.6 20.1L10.2 19.8C9.85 19.55 9.45 19.4 9 19.4C7.6 19.4 6.5 20.5 6.5 21.9C6.5 23.3 7.6 24.4 9 24.4C10.4 24.4 11.5 23.3 11.5 21.9C11.5 21.45 11.35 21.05 11.1 20.7L10.8 20.3L18.05 13.05L18.45 13.4C18.8 13.7 19.3 13.9 19.8 13.9C21.2 13.9 22.3 12.8 22.3 11.4C22.3 11 22.2 10.6 22 10.3L20.55 11.75L19.4 11.85L18.65 11.1L18.75 9.95L20.2 8.5C20 8.5 19.75 8.5 19.5 8.5Z" fill="#8a8a9a"/></svg>
+      PushToApp
+    </div>
+    <span style="font-size:11px;color:var(--muted);font-family:var(--font-mono)">by @shikwonh</span>
+  </div>
+  <div style="font-size:11px;color:var(--muted);font-family:var(--font-mono);text-align:center">
+    All processing happens in your browser · No data sent to any server
+  </div>
+  <div style="font-size:11px;color:var(--muted);font-family:var(--font-mono)">v2.0 · Free forever</div>
+</footer>
+
+</div><!-- /builderPage -->
+
+<script>
+/* ── PAGE NAVIGATION ── */
+function startBuilder() {
+  document.getElementById('homePage').classList.add('hidden');
+  document.getElementById('builderPage').style.display = 'block';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function showHomePage() {
+  document.getElementById('homePage').classList.remove('hidden');
+  document.getElementById('builderPage').style.display = 'none';
+  document.getElementById('myAppsPage').style.display = 'none';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function scrollToHow() {
+  var el = document.getElementById('howItWorks');
+  if (el) el.scrollIntoView({behavior:'smooth'});
+}
+
+/* ── STATE ── */
+var currentStep = 1;
+var iconBase64 = null;
+var zipBlob = null;
+var iosZipBlob = null;
+var activeFeatures = new Set(['splash','swiperefresh','backbutton']);
+var sourceMode = 'url'; // 'url' or 'html'
+var htmlFileContent = null; // base64 of the main/entry HTML file (for preview & compat)
+var htmlFileRawContent = null; // raw text of main HTML file
+var uploadedFiles = {}; // {filename: {base64, raw, type, isText}} — all uploaded project files
+var entryHtmlFile = 'index.html'; // which file is the entry point
+
+/* ── PRESETS ── */
+var pPresets = ['#0c0c0e','#111114','#1a1a2e','#0f172a','#18181b','#1c1917'];
+var aPresets = ['#ffffff','#e0e0e0','#c8c8c8','#aaaaaa','#888888','#f5f5f5'];
+
+function buildChips(arr, pickId, hexId, wrapId) {
+  var w = document.getElementById(wrapId);
+  w.innerHTML = '<span class="chip-lbl">Quick:</span>';
+  arr.forEach(function(c){
+    var d = document.createElement('div');
+    d.className='chip'; d.style.background=c; d.title=c;
+    d.onclick=function(){
+      document.getElementById(pickId).value=c;
+      document.getElementById(hexId).value=c;
+      updatePreview();
+    };
+    w.appendChild(d);
+  });
+}
+
+/* ── NAVIGATION ── */
+function nextStep() {
+  if (currentStep===1) {
+    var appName=document.getElementById('appName').value.trim();
+    if (!appName) { alert('Please fill in App Name to continue.'); return; }
+    if (sourceMode==='url' && !document.getElementById('url').value.trim()) {
+      alert('Please fill in Website URL to continue.'); return;
+    }
+    if (sourceMode==='html' && !htmlFileContent) {
+      alert('Please upload at least one file to continue.'); return;
+    }
+  }
+  goStep(currentStep+1);
+}
+function prevStep() { goStep(currentStep-1); }
+function goStep(n) {
+  if (n<1||n>4) return;
+  document.getElementById('panel'+currentStep).classList.remove('active');
+  currentStep=n;
+  document.getElementById('panel'+currentStep).classList.add('active');
+  updateStepUI();
+  if (n===4) fillSummary();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function updateStepUI() {
+  for (var i=1;i<=4;i++) {
+    var el=document.getElementById('sb'+i);
+    el.className='sb-step';
+    var sn=document.getElementById('sn'+i);
+    if (i<currentStep) { el.classList.add('done'); sn.textContent='✓'; }
+    else if (i===currentStep) { el.classList.add('active'); sn.textContent=i; }
+    else sn.textContent=i;
+  }
+}
+
+/* ── SOURCE MODE ── */
+function setSourceMode(mode) {
+  sourceMode = mode;
+  document.getElementById('urlField').style.display = mode==='url' ? '' : 'none';
+  document.getElementById('htmlField').style.display = mode==='html' ? '' : 'none';
+  document.getElementById('modeUrlBtn').classList.toggle('active', mode==='url');
+  document.getElementById('modeHtmlBtn').classList.toggle('active', mode==='html');
+  updatePreview();
+}
+
+/* ── MULTI-FILE UPLOAD ── */
+var TEXT_EXTS = /\.(html?|css|js|mjs|ts|jsx|tsx|json|xml|svg|txt|md|php|py|rb|java|kt|swift|csv)$/i;
+var BIN_EXTS  = /\.(png|jpe?g|gif|webp|ico|woff2?|ttf|otf|eot|pdf)$/i;
+
+function getFileIcon(name) {
+  if (/\.html?$/i.test(name)) return '🌐';
+  if (/\.css$/i.test(name)) return '🎨';
+  if (/\.(js|mjs|ts|jsx|tsx)$/i.test(name)) return '⚡';
+  if (/\.(png|jpe?g|gif|webp|ico|svg)$/i.test(name)) return '🖼';
+  if (/\.(woff2?|ttf|otf|eot)$/i.test(name)) return '🔤';
+  if (/\.json$/i.test(name)) return '📋';
+  if (/\.(php|py|rb|java|kt|swift)$/i.test(name)) return '💻';
+  return '📄';
+}
+
+function readFileAsBase64(file) {
+  return new Promise(function(resolve) {
+    var r = new FileReader();
+    r.onload = function(e) { resolve(e.target.result.split(',')[1]); };
+    r.readAsDataURL(file);
+  });
+}
+function readFileAsText(file) {
+  return new Promise(function(resolve) {
+    var r = new FileReader();
+    r.onload = function(e) { resolve(e.target.result); };
+    r.readAsText(file);
+  });
+}
+
+async function handleMultiFiles(fileList) {
+  if (!fileList || !fileList.length) return;
+  var files = Array.from(fileList);
+
+  for (var i = 0; i < files.length; i++) {
+    var file = files[i];
+    var name = file.name;
+    var isText = TEXT_EXTS.test(name);
+    var raw = null, b64 = null;
+    if (isText) {
+      raw = await readFileAsText(file);
+      b64 = btoa(unescape(encodeURIComponent(raw)));
+    } else {
+      b64 = await readFileAsBase64(file);
+    }
+    uploadedFiles[name] = { base64: b64, raw: raw, type: file.type, isText: isText };
+  }
+
+  // Determine entry HTML file
+  var htmlFiles = Object.keys(uploadedFiles).filter(function(n){ return /\.html?$/i.test(n); });
+  if (htmlFiles.length > 0) {
+    // Prefer index.html, then first html file
+    entryHtmlFile = htmlFiles.indexOf('index.html') >= 0 ? 'index.html' : htmlFiles[0];
+    // Show entry point selector if multiple html files
+    var epRow = document.getElementById('entryPointRow');
+    var epSelect = document.getElementById('entryPointSelect');
+    if (htmlFiles.length > 1) {
+      epRow.style.display = 'block';
+      epSelect.innerHTML = htmlFiles.map(function(f){
+        return '<option value="' + f + '"' + (f === entryHtmlFile ? ' selected' : '') + '>' + f + '</option>';
+      }).join('');
+      epSelect.onchange = function() {
+        entryHtmlFile = this.value;
+        var entry = uploadedFiles[entryHtmlFile];
+        if (entry && entry.raw) { htmlFileRawContent = entry.raw; htmlFileContent = entry.base64; updatePreview(); }
+      };
+    } else {
+      epRow.style.display = 'none';
+    }
+    var entry = uploadedFiles[entryHtmlFile];
+    if (entry) { htmlFileRawContent = entry.raw; htmlFileContent = entry.base64; }
+  } else {
+    // No HTML files — still allow bundling other assets
+    htmlFileRawContent = null;
+    htmlFileContent = btoa('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>App</title></head><body><p>No HTML entry point found.</p></body></html>');
+    entryHtmlFile = 'index.html';
+  }
+
+  // Update UI
+  var allNames = Object.keys(uploadedFiles);
+  document.getElementById('htmlFileName').textContent = entryHtmlFile + ' (entry)';
+  document.getElementById('fileCountLabel').textContent = allNames.length + ' file' + (allNames.length !== 1 ? 's' : '') + ' loaded';
+  var fileListEl = document.getElementById('fileList');
+  fileListEl.innerHTML = allNames.map(function(n) {
+    var sz = uploadedFiles[n].base64 ? Math.round(uploadedFiles[n].base64.length * 0.75 / 1024) : 0;
+    return '<div style="display:flex;align-items:center;gap:6px;padding:3px 6px;background:var(--surface);border-radius:5px;font-size:10px;color:var(--sub)">' +
+      '<span>' + getFileIcon(n) + '</span>' +
+      '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--font-mono)">' + n + '</span>' +
+      '<span style="color:var(--muted);flex-shrink:0">' + sz + 'KB</span>' +
+    '</div>';
+  }).join('');
+
+  document.getElementById('htmlDropHint').style.display = 'none';
+  document.getElementById('htmlReady').style.display = 'flex';
+
+  updatePreview();
+}
+
+/* ── PKG ── */
+function updatePkg() {
+  var url=document.getElementById('url').value.trim();
+  var name=document.getElementById('appName').value.trim();
+  var pkg='com.example.myapp';
+  if (sourceMode==='html') {
+    // derive from app name only
+    if (name) {
+      var slug=name.replace(/[^a-z0-9]/gi,'').toLowerCase()||'myapp';
+      pkg='com.app.'+slug;
+    }
+  } else if (url) {
+    try {
+      var host=new URL(url.startsWith('http')?url:'https://'+url).hostname;
+      var parts=host.replace(/^www\./,'').split('.').reverse()
+        .map(function(p){return p.replace(/[^a-z0-9]/gi,'').toLowerCase();}).filter(Boolean);
+      if (name) parts.push(name.replace(/[^a-z0-9]/gi,'').toLowerCase()||'app');
+      if (parts.length>=2) pkg=parts.slice(0,3).join('.');
+    } catch(e){}
+  }
+  var sp=pkg.split('.');
+  document.getElementById('pkgPreview').innerHTML=sp.map(function(p){return '<span class="hi">'+p+'</span>';}).join('.');
+  updateVersionJsonPreview();
+  return pkg;
+}
+
+/* ── COLORS ── */
+function syncColor(fromId,toId) {
+  var v=document.getElementById(fromId).value;
+  if (fromId.endsWith('Hex')&&/^#[0-9a-f]{6}$/i.test(v)) document.getElementById(toId).value=v;
+  else if (!fromId.endsWith('Hex')) document.getElementById(toId).value=v;
+}
+
+/* ── ICON ── */
+function handleIcon(file) {
+  if (!file) return;
+  var r=new FileReader();
+  r.onload=function(e){
+    iconBase64=e.target.result.split(',')[1];
+    var p=document.getElementById('iconPrev');
+    p.src=e.target.result; p.classList.add('show');
+    document.querySelector('#iconDrop .drop-hint').style.display='none';
+    updatePreview();
+  };
+  r.readAsDataURL(file);
+}
+
+/* ── PREVIEW ── */
+function updatePreview() {
+  var name = document.getElementById('appName').value.trim() || 'My App';
+  var primary = document.getElementById('primaryHex').value || '#111111';
+  var urlVal = document.getElementById('url').value.trim();
+
+  // Update splash
+  document.getElementById('splashNameText').textContent = name;
+  document.getElementById('splashTagline').textContent = urlVal || 'Your App';
+  // Update home label
+  document.getElementById('homeLabel').textContent = name;
+  // Splash bg
+  document.getElementById('splashView').style.background = primary;
+  document.getElementById('phoneScreen').style.background = '#0f0f0f';
+
+  // Home app icon color
+  var homeIconEl = document.getElementById('homeIconEl');
+  homeIconEl.style.setProperty('--primary-color', primary);
+
+  // Web preview URL bar
+  document.getElementById('webUrlBarText').textContent = urlVal || 'enter a URL above';
+  if (urlVal && sourceMode === 'url') {
+    document.getElementById('webNoPreview').style.display = 'none';
+    var iframe = document.getElementById('webPreviewIframe');
+    iframe.style.display = 'block';
+    if (iframe.getAttribute('data-src') !== urlVal) {
+      iframe.setAttribute('data-src', urlVal);
+    }
+  } else if (sourceMode === 'html' && htmlFileRawContent) {
+    document.getElementById('webNoPreview').style.display = 'none';
+    document.getElementById('webPreviewIframe').style.display = 'block';
+  } else {
+    document.getElementById('webNoPreview').style.display = 'flex';
+    document.getElementById('webPreviewIframe').style.display = 'none';
+  }
+
+  if (iconBase64) {
+    var src = 'data:image/png;base64,' + iconBase64;
+    ['splashIconImg','homeIconImg'].forEach(function(id){
+      var img = document.getElementById(id);
+      img.src = src; img.style.display = 'block';
+    });
+    document.getElementById('splashIconSvg').style.display = 'none';
+    document.getElementById('homeIconSvg').style.display = 'none';
+    document.getElementById('splashIconWrap').style.background = 'transparent';
+    document.getElementById('homeIconEl').style.background = 'transparent';
+  } else {
+    document.getElementById('homeIconEl').style.background = primary;
+    document.getElementById('splashIconWrap').style.background = 'rgba(255,255,255,0.12)';
+  }
+}
+
+/* ── INTERACTIVE PHONE LAUNCH ── */
+function launchApp() {
+  var homeView = document.getElementById('homeView');
+  var splashView = document.getElementById('splashView');
+  var webView = document.getElementById('webPreviewView');
+  var tapHint = document.getElementById('tapHint');
+  var prevHint = document.getElementById('prevHint');
+
+  // Hide hint
+  if (tapHint) tapHint.style.display = 'none';
+  prevHint && (prevHint.style.display = 'none');
+
+  // Step 1: Hide home, show splash
+  homeView.classList.remove('show');
+  splashView.classList.add('show');
+
+  // Step 2: After splash duration, show web view
+  setTimeout(function() {
+    splashView.classList.remove('show');
+    // Load iframe now
+    var iframe = document.getElementById('webPreviewIframe');
+    var dataSrc = iframe.getAttribute('data-src');
+    if (dataSrc && iframe.src !== dataSrc) iframe.src = dataSrc;
+    if (sourceMode === 'html' && htmlFileRawContent) iframe.srcdoc = htmlFileRawContent;
+    webView.classList.add('show');
+    prevHint && (prevHint.style.display = '');
+    prevHint && (prevHint.textContent = 'Tap ⊡ to go back home');
+  }, 1800);
+}
+function goHomeScreen() {
+  document.getElementById('splashView').classList.remove('show');
+  document.getElementById('webPreviewView').classList.remove('show');
+  document.getElementById('homeView').classList.add('show');
+  var prevHint = document.getElementById('prevHint');
+  if (prevHint) prevHint.textContent = 'Tap the app icon\nto preview the launch';
+}
+
+/* ── OLD switchPrev kept for compatibility ── */
+function switchPrev(tab,btn) { /* no-op, tabs removed */ }
+
+/* ── FEATURES ── */
+function toggleFeat(id) {
+  var el=document.getElementById('f-'+id);
+  var on=el.classList.toggle('on');
+  var chk=el.querySelector('.chk');
+  chk.textContent=on?'✓':''; chk.style.color=on?'var(--bg)':'transparent';
+  if (on) activeFeatures.add(id); else activeFeatures.delete(id);
+  var ex=document.getElementById('fe-'+id);
+  if (ex) ex.classList.toggle('show',on);
+}
+
+/* ── SUMMARY ── */
+var FEAT_NAMES={splash:'Splash Screen',swiperefresh:'Pull-to-Refresh',fullscreen:'Fullscreen',loadingbar:'Loading Bar',portrait:'Force Portrait',wakelock:'Keep Screen On',backbutton:'Back Button',filechooser:'File Upload',screenshot:'Block Screenshots',credentials:'Auto-Save Login',pinlock:'PIN/Biometric Lock',rootexit:'Block Rooted Devices',emublock:'Block Emulators',cleardata:'Clear Data on Exit',sslonly:'Force HTTPS Only',devtools:'Disable WebView Debug',tapjack:'Anti-Tapjacking',offline:'Offline Fallback',location:'Location',camera:'Camera & Mic',useragent:'Custom UA',tracking:'App Tracking',customjs:'Custom JS',updatecheck:'Update Check'};
+function fillSummary() {
+  var url=document.getElementById('url').value.trim()||'—';
+  var appName=document.getElementById('appName').value.trim()||'—';
+  var version=document.getElementById('version').value.trim()||'1.0.0';
+  var dev=document.getElementById('devName').value.trim()||'—';
+  var pkg=updatePkg();
+  document.getElementById('sumGrid').innerHTML=[
+    ['URL',url],['App Name',appName],['Version',version],['Developer',dev],['Package',pkg]
+  ].map(function(r){return '<div class="sum-card"><div class="sum-lbl">'+r[0]+'</div><div class="sum-val">'+r[1]+'</div></div>';}).join('');
+  document.getElementById('featPills').innerHTML=Array.from(activeFeatures).map(function(f){
+    return '<span class="feat-pill">'+(FEAT_NAMES[f]||f)+'</span>';
+  }).join('')||'<span style="color:var(--muted);font-size:11px">No features selected</span>';
+}
+
+/* ── TABS ── */
+function switchTab(btn,id) {
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active')});
+  btn.classList.add('active');
+  document.querySelectorAll('.path').forEach(function(p){p.classList.remove('show')});
+  document.getElementById('path-'+id).classList.add('show');
+}
+
+/* ── PROGRESS ── */
+function setProgress(pct,lbl){
+  document.getElementById('progFill').style.width=pct+'%';
+  document.getElementById('progLabel').textContent=lbl;
+  document.getElementById('progPct').textContent=pct+'%';
+}
+function sleep(ms){return new Promise(function(r){setTimeout(r,ms);})}
+
+/* ══════════════ GENERATE ══════════════ */
+async function generateProject() {
+  var urlVal=document.getElementById('url').value.trim();
+  var appName=document.getElementById('appName').value.trim();
+
+  // Validate based on source mode
+  if (sourceMode==='url') {
+    if (!urlVal||!appName){alert('Please fill in Website URL and App Name.');goStep(1);return;}
+  } else {
+    if (!htmlFileContent||!appName){alert('Please upload an HTML file and fill in App Name.');goStep(1);return;}
+  }
+
+  var btn=document.getElementById('genBtn');
+  btn.disabled=true;
+  document.getElementById('progWrap').style.display='block';
+
+  var pkg=updatePkg();
+  var version=document.getElementById('version').value.trim()||'1.0.0';
+  var desc=document.getElementById('desc').value.trim()||appName;
+  var devName=document.getElementById('devName').value.trim()||'Developer';
+  var primaryColor=document.getElementById('primaryHex').value||'#111111';
+  var accentColor=document.getElementById('accentHex').value||'#ffffff';
+  var uaStr=document.getElementById('uaString').value.trim();
+  var customJs=document.getElementById('customJsCode').value.trim();
+  var updateUrl=document.getElementById('updateCheckUrl').value.trim();
+
+  // Effective URL: for HTML mode use file:///android_asset/index.html
+  var effectiveUrl = sourceMode==='html' ? 'file:///android_asset/'+entryHtmlFile : urlVal;
+
+  var opts={
+    screenshot:  activeFeatures.has('screenshot'),
+    credentials: activeFeatures.has('credentials'),
+    pinlock:     activeFeatures.has('pinlock'),
+    rootexit:    activeFeatures.has('rootexit'),
+    emublock:    activeFeatures.has('emublock'),
+    cleardata:   activeFeatures.has('cleardata'),
+    sslonly:     activeFeatures.has('sslonly'),
+    devtools:    activeFeatures.has('devtools'),
+    tapjack:     activeFeatures.has('tapjack'),
+    tracking:    activeFeatures.has('tracking'),
+    fullscreen:  activeFeatures.has('fullscreen'),
+    swiperefresh:activeFeatures.has('swiperefresh'),
+    loadingbar:  activeFeatures.has('loadingbar'),
+    portrait:    activeFeatures.has('portrait'),
+    wakelock:    activeFeatures.has('wakelock'),
+    offline:     activeFeatures.has('offline'),
+    backbutton:  activeFeatures.has('backbutton'),
+    filechooser: activeFeatures.has('filechooser'),
+    location:    activeFeatures.has('location'),
+    camera:      activeFeatures.has('camera'),
+    useragent:   activeFeatures.has('useragent')&&!!uaStr,
+    customjs:    activeFeatures.has('customjs')&&!!customJs,
+    splash:      activeFeatures.has('splash'),
+    updatecheck: activeFeatures.has('updatecheck')&&!!updateUrl,
+    htmlMode:    sourceMode==='html',
+    uaString:    uaStr,
+    customJsCode:customJs,
+    updateUrl:   updateUrl,
+    appName:     appName,
+    devName:     devName
+  };
+
+  var root=appName.replace(/[^a-zA-Z0-9]/g,'')+'_Android/';
+  var pkgPath=pkg.replace(/\./g,'/');
+  var zip=new JSZip();
+
+  setProgress(10,'Writing AndroidManifest.xml...'); await sleep(150);
+  zip.file(root+'app/src/main/AndroidManifest.xml',buildManifest(pkg,appName,opts));
+
+  setProgress(22,'Writing MainActivity.java...'); await sleep(200);
+  zip.file(root+'app/src/main/java/'+pkgPath+'/MainActivity.java',buildMainActivity(pkg,effectiveUrl,opts));
+
+  setProgress(36,'Writing layouts...'); await sleep(150);
+  zip.file(root+'app/src/main/res/layout/activity_main.xml',buildLayout(opts));
+  if (opts.splash){
+    zip.file(root+'app/src/main/res/layout/activity_splash.xml',buildSplashLayout());
+    zip.file(root+'app/src/main/java/'+pkgPath+'/SplashActivity.java',buildSplashActivity(pkg));
+  }
+
+  // HTML asset
+  // HTML/project assets — add ALL uploaded files
+  if (opts.htmlMode) {
+    var allFileNames = Object.keys(uploadedFiles);
+    if (allFileNames.length > 0) {
+      allFileNames.forEach(function(fname) {
+        var f = uploadedFiles[fname];
+        zip.file(root+'app/src/main/assets/'+fname, f.base64, {base64:true});
+      });
+    } else if (htmlFileContent) {
+      zip.file(root+'app/src/main/assets/'+entryHtmlFile, htmlFileContent, {base64:true});
+    }
+  }
+
+  setProgress(48,'Writing resources...'); await sleep(150);
+  zip.file(root+'app/src/main/res/values/strings.xml',buildStrings(appName,desc,devName,effectiveUrl));
+  zip.file(root+'app/src/main/res/values/colors.xml',buildColors(primaryColor,accentColor));
+  zip.file(root+'app/src/main/res/values/themes.xml',buildThemes(appName,opts));
+  zip.file(root+'app/src/main/res/xml/network_security_config.xml',buildNetworkSecurity());
+
+  setProgress(60,'Writing Gradle files...'); await sleep(150);
+  zip.file(root+'app/build.gradle',buildAppGradle(pkg,version,opts));
+  zip.file(root+'build.gradle',buildRootGradle());
+  zip.file(root+'settings.gradle',buildSettings(appName));
+  zip.file(root+'gradle.properties','android.useAndroidX=true\nandroid.enableJetifier=true\norg.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8\norg.gradle.daemon=false\norg.gradle.parallel=true\n');
+  zip.file(root+'app/proguard-rules.pro','# '+appName+'\n-keepattributes *Annotation*\n-keep class '+pkg+'.** { *; }\n');
+  zip.file(root+'local.properties','# sdk.dir=/path/to/android/sdk\n');
+
+  setProgress(72,'Writing Gradle wrapper...'); await sleep(100);
+  zip.file(root+'gradle/wrapper/gradle-wrapper.properties',buildGradleWrapperProps());
+  zip.file(root+'gradlew',buildGradlew(),{unixPermissions:'0755'});
+  zip.file(root+'gradlew.bat',buildGradlewBat());
+
+  setProgress(82,'Writing GitHub Actions workflow...'); await sleep(150);
+  zip.file(root+'.github/workflows/build.yml',buildGithubAction(appName));
+
+  setProgress(92,'Adding icons & README...'); await sleep(100);
+  var whitePng='iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI6QAAAABJRU5ErkJggg==';
+  var iconData=iconBase64||whitePng;
+  ['hdpi','xhdpi','xxhdpi','xxxhdpi','mdpi'].forEach(function(d){
+    zip.file(root+'app/src/main/res/mipmap-'+d+'/ic_launcher.png',iconData,{base64:true});
+    zip.file(root+'app/src/main/res/mipmap-'+d+'/ic_launcher_round.png',iconData,{base64:true});
+  });
+  zip.file(root+'README.md',buildReadme(appName,urlVal,pkg,version,devName,opts));
+
+  setProgress(98,'Packaging ZIP...'); await sleep(300);
+  zipBlob=await zip.generateAsync({type:'blob',compression:'DEFLATE',compressionOptions:{level:6}});
+  setProgress(100,'Done!'); await sleep(300);
+  document.getElementById('progWrap').style.display='none';
+  btn.disabled=false;
+  triggerDownload();
+  saveCurrentApp();
+  document.getElementById('outputArea').classList.add('show');
+  document.getElementById('outputArea').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function triggerDownload(){
+  if (!zipBlob) return;
+  var name=(document.getElementById('appName').value||'MyApp').replace(/[^a-zA-Z0-9]/g,'_');
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(zipBlob);
+  a.download=name+'_Android_Project.zip';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(a.href);},5000);
+}
+
+async function generateIos(){
+  var appName=document.getElementById('appName').value.trim()||'MyApp';
+  var urlVal=document.getElementById('url').value.trim()||'https://yourwebsite.com';
+  var primaryColor=document.getElementById('primaryHex').value||'#111111';
+  var version=document.getElementById('version').value.trim()||'1.0.0';
+  var devName=document.getElementById('devName').value.trim()||'Developer';
+  var safe=appName.replace(/[^a-zA-Z0-9]/g,'');
+
+  var zip=new JSZip();
+  var root=safe+'_iOS_PWA/';
+
+  // manifest.json
+  var manifest={
+    name:appName,short_name:appName,
+    start_url:sourceMode==='html'?'./index.html':urlVal,
+    display:'standalone',
+    background_color:primaryColor,
+    theme_color:primaryColor,
+    description:'Built with PushToApp',
+    icons:[{src:'icon.png',sizes:'512x512',type:'image/png'}]
+  };
+  zip.file(root+'manifest.json',JSON.stringify(manifest,null,2));
+
+  // Service worker
+  var sw='const CACHE="'+safe.toLowerCase()+'-v'+version+'";\n'+
+    'const OFFLINE_URL="offline.html";\n'+
+    'self.addEventListener("install",e=>{\n'+
+    '  e.waitUntil(caches.open(CACHE).then(c=>c.addAll(["./","./offline.html"])))\n'+
+    '});\n'+
+    'self.addEventListener("fetch",e=>{\n'+
+    '  e.respondWith(fetch(e.request).catch(()=>caches.match("offline.html")))\n'+
+    '});\n';
+  zip.file(root+'sw.js',sw);
+
+  // Offline page
+  var offlineHtml='<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+appName+'</title>'+
+    '<style>body{background:'+primaryColor+';color:#fff;font-family:-apple-system,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;margin:0;text-align:center;padding:20px}'+
+    '.icon{font-size:64px;margin-bottom:20px}.title{font-size:24px;font-weight:700;margin:0 0 10px}.msg{color:rgba(255,255,255,0.7);max-width:280px;line-height:1.6}'+
+    'button{margin-top:24px;padding:12px 32px;background:#fff;color:'+primaryColor+';border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer}'+
+    '</style></head><body>'+
+    '<div class="icon">📱</div>'+
+    '<div class="title">Welcome to '+appName+'</div>'+
+    '<div class="msg">Connect to WiFi to access '+appName+'. Please check your internet connection and try again.</div>'+
+    '<button onclick="location.reload()">Retry</button></body></html>';
+  zip.file(root+'offline.html',offlineHtml);
+
+  // Icon
+  var iconData=iconBase64||'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI6QAAAABJRU5ErkJggg==';
+  zip.file(root+'icon.png',iconData,{base64:true});
+
+  // Main HTML (if HTML mode, use uploaded file; otherwise redirect wrapper)
+  var mainHtml;
+  if (sourceMode==='html' && htmlFileRawContent) {
+    mainHtml=htmlFileRawContent;
+  } else {
+    mainHtml='<!DOCTYPE html><html><head>'+
+      '<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">'+
+      '<meta name="apple-mobile-web-app-capable" content="yes">'+
+      '<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">'+
+      '<meta name="apple-mobile-web-app-title" content="'+appName+'">'+
+      '<link rel="apple-touch-icon" href="icon.png">'+
+      '<link rel="manifest" href="manifest.json">'+
+      '<title>'+appName+'</title>'+
+      '<style>*{margin:0;padding:0;box-sizing:border-box}html,body{height:100%}iframe{width:100%;height:100%;border:none;display:block}'+
+      'body{background:'+primaryColor+'}</style>'+
+      '<script>if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js");<\/script>'+
+      '</head><body>'+
+      '<iframe src="'+urlVal+'" allow="geolocation;camera;microphone;fullscreen" allowfullscreen></iframe>'+
+      '</body></html>';
+  }
+  zip.file(root+'index.html',mainHtml);
+
+  // README
+  var readme='# '+appName+' — iOS PWA\n\nGenerated by PushToApp\n\n## Install on iPhone (FREE — No App Store needed!)\n\n'+
+    '### Method 1: Host & Add to Home Screen\n'+
+    '1. Host all files from this ZIP on any web server (Netlify, GitHub Pages, etc.)\n'+
+    '2. Open the hosted URL in Safari on iPhone\n'+
+    '3. Tap the **Share** button (box with arrow)\n'+
+    '4. Tap **"Add to Home Screen"**\n'+
+    '5. Tap **"Add"** — your app icon appears on the home screen!\n\n'+
+    '### Method 2: GitHub Pages (Free)\n'+
+    '1. Create a public GitHub repo\n'+
+    '2. Upload these files to the root\n'+
+    '3. Go to Settings → Pages → enable from main branch\n'+
+    '4. Open the GitHub Pages URL in Safari on iPhone\n'+
+    '5. Add to Home Screen\n\n'+
+    '## App Details\n'+
+    '| Field | Value |\n|-------|-------|\n'+
+    '| App | '+appName+' |\n'+
+    '| URL | '+urlVal+' |\n'+
+    '| Developer | '+devName+' |\n'+
+    '| Version | '+version+' |\n\n'+
+    '> Built with PushToApp\n';
+  zip.file(root+'README.md',readme);
+
+  var blob=await zip.generateAsync({type:'blob',compression:'DEFLATE',compressionOptions:{level:6}});
+  iosZipBlob=blob;
+  var name2=safe||'MyApp';
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=name2+'_iOS_PWA.zip';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(a.href);},5000);
+  alert('✅ iOS PWA ZIP downloaded!\n\nHost the files online, then open in Safari → Share → Add to Home Screen. It\'s completely free!');
+}
+
+/* ══════════════ FILE BUILDERS ══════════════ */
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function buildManifest(pkg,appName,opts){
+  var safe=appName.replace(/[^a-zA-Z0-9]/g,'');
+  var mainTheme='Theme.'+safe;
+  var acts='';
+  if (opts.splash){
+    acts='        <activity android:name=".SplashActivity" android:exported="true" android:theme="@style/Theme.Splash">\n'+
+      '            <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>\n'+
+      '        </activity>\n        <activity android:name=".MainActivity" android:exported="false" android:configChanges="orientation|screenSize|keyboardHidden|screenLayout|uiMode|smallestScreenSize" android:theme="@style/'+mainTheme+'"/>';
+  } else {
+    acts='        <activity android:name=".MainActivity" android:exported="true" android:configChanges="orientation|screenSize|keyboardHidden|screenLayout|uiMode|smallestScreenSize" android:theme="@style/'+mainTheme+'">\n'+
+      '            <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>\n'+
+      '        </activity>';
+  }
+  var perms='    <uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>';
+  if (opts.location) perms+='\n    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>\n    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>';
+  if (opts.camera) perms+='\n    <uses-permission android:name="android.permission.CAMERA"/>\n    <uses-permission android:name="android.permission.RECORD_AUDIO"/>\n    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>';
+  return '<?xml version="1.0" encoding="utf-8"?>\n<manifest xmlns:android="http://schemas.android.com/apk/res/android">\n\n'+perms+'\n\n    <application\n        android:allowBackup="true"\n        android:icon="@mipmap/ic_launcher"\n        android:label="@string/app_name"\n        android:roundIcon="@mipmap/ic_launcher_round"\n        android:supportsRtl="true"\n        android:usesCleartextTraffic="true"\n        android:networkSecurityConfig="@xml/network_security_config"\n        android:theme="@style/Theme.'+safe+'">\n\n'+acts+'\n\n    </application>\n</manifest>';
+}
+
+function buildMainActivity(pkg,url,opts){
+  var safeUrl=url.replace(/\\/g,'\\\\').replace(/"/g,'\\"');
+  var L=[];
+  L.push('package '+pkg+';');
+  L.push('import android.app.Activity;');
+  L.push('import android.content.pm.ActivityInfo;');
+  L.push('import android.content.SharedPreferences;');
+  L.push('import android.net.ConnectivityManager;');
+  L.push('import android.net.NetworkInfo;');
+  L.push('import android.net.Uri;');
+  L.push('import android.os.Bundle;');
+  L.push('import android.os.Handler;');
+  L.push('import android.view.View;');
+  L.push('import android.view.ViewGroup;');
+  L.push('import android.view.WindowManager;');
+  L.push('import android.webkit.JavascriptInterface;');
+  L.push('import android.webkit.ValueCallback;');
+  L.push('import android.webkit.WebChromeClient;');
+  L.push('import android.webkit.WebSettings;');
+  L.push('import android.webkit.WebView;');
+  L.push('import android.webkit.WebViewClient;');
+  L.push('import android.widget.FrameLayout;');
+  if (opts.location) L.push('import android.webkit.GeolocationPermissions;');
+  if (opts.camera) L.push('import android.webkit.PermissionRequest;');
+  if (opts.loadingbar) L.push('import android.widget.ProgressBar;');
+  if (opts.swiperefresh) L.push('import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;');
+  if (opts.updatecheck) L.push('import android.app.AlertDialog;');
+  L.push('import java.text.SimpleDateFormat;');
+  L.push('import java.util.Date;');
+  L.push('import java.util.Locale;');
+  if (opts.pinlock) {
+    L.push('public class MainActivity extends androidx.fragment.app.FragmentActivity {');
+  } else {
+    L.push('public class MainActivity extends Activity {');
+  }
+  L.push('    private WebView webView;');
+  L.push('    private static final String WEBSITE_URL = "'+safeUrl+'";');
+  L.push('    private static final String PREFS = "'+pkg+'.prefs";');
+  if (opts.tracking) L.push('    private static final String TRACK_PREFS = "'+pkg+'.tracking";');
+  if (opts.swiperefresh) L.push('    private SwipeRefreshLayout swipeRefresh;');
+  if (opts.loadingbar) L.push('    private ProgressBar progressBar;');
+  if (opts.filechooser) L.push('    private ValueCallback<Uri[]> filePathCallback;');
+  // Fullscreen video fields
+  L.push('    private View mCustomView;');
+  L.push('    private WebChromeClient.CustomViewCallback mCustomViewCallback;');
+  L.push('    private FrameLayout mFullscreenContainer;');
+  L.push('    private int mOriginalOrientation;');
+  L.push('');
+  L.push('    private void applyFullscreen() {');
+  L.push('        try {');
+  L.push('            if (android.os.Build.VERSION.SDK_INT >= 30) {');
+  L.push('                getWindow().setDecorFitsSystemWindows(false);');
+  L.push('                android.view.WindowInsetsController c = getWindow().getInsetsController();');
+  L.push('                if (c != null) {');
+  L.push('                    c.hide(android.view.WindowInsets.Type.statusBars() | android.view.WindowInsets.Type.navigationBars());');
+  L.push('                    c.setSystemBarsBehavior(android.view.WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);');
+  L.push('                }');
+  L.push('            } else {');
+  L.push('                getWindow().getDecorView().setSystemUiVisibility(');
+  L.push('                    View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY');
+  L.push('                    | View.SYSTEM_UI_FLAG_LAYOUT_STABLE');
+  L.push('                    | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN');
+  L.push('                    | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION');
+  L.push('                    | View.SYSTEM_UI_FLAG_FULLSCREEN');
+  L.push('                    | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);');
+  L.push('            }');
+  L.push('        } catch (Exception e) {}');
+  L.push('    }');
+  L.push('');
+  L.push('    @Override protected void onCreate(Bundle savedInstanceState) {');
+  L.push('        super.onCreate(savedInstanceState);');
+  // Set flags BEFORE setContentView
+  L.push('        getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);');
+  if (opts.screenshot) L.push('        getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);');
+  if (opts.wakelock)   L.push('        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);');
+  if (opts.portrait)   L.push('        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);');
+  if (opts.rootexit) {
+    L.push('        if (isRooted()) { showSecurityAlert("This app cannot run on rooted devices."); return; }');
+  }
+  if (opts.emublock) {
+    L.push('        if (isEmulator()) { showSecurityAlert("This app cannot run on emulators."); return; }');
+  }
+  if (opts.tracking)   L.push('        trackAppOpen();');
+  L.push('        setContentView(R.layout.activity_main);');
+  if (opts.loadingbar) L.push('        progressBar = findViewById(R.id.progressBar);');
+  if (opts.swiperefresh) L.push('        swipeRefresh = findViewById(R.id.swipe_refresh);');
+  L.push('        webView = findViewById(R.id.webview);');
+  L.push('        setupWebView();');
+  if (opts.swiperefresh){
+    L.push('        swipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {');
+    L.push('            @Override public void onRefresh() { webView.reload(); new Handler().postDelayed(new Runnable() { @Override public void run() { swipeRefresh.setRefreshing(false); } }, 1500); }');
+    L.push('        });');
+  }
+  if (opts.updatecheck && opts.updateUrl) {
+    var safeUpdateUrl=opts.updateUrl.replace(/\\/g,'\\\\').replace(/"/g,'\\"');
+    L.push('        checkForUpdate("'+safeUpdateUrl+'");');
+  }
+  if (opts.pinlock) {
+    L.push('        checkBiometricLock();');
+  } else {
+    L.push('        loadWebsite();');
+  }
+  L.push('        applyFullscreen();');
+  L.push('    }');
+  L.push('    private void setupWebView() {');
+  if (opts.devtools) L.push('        android.webkit.WebView.setWebContentsDebuggingEnabled(false);');
+  if (opts.tapjack)  L.push('        webView.setFilterTouchesWhenObscured(true);');
+  L.push('        WebSettings s = webView.getSettings();');
+  L.push('        s.setJavaScriptEnabled(true); s.setDomStorageEnabled(true);');
+  L.push('        s.setLoadWithOverviewMode(true); s.setUseWideViewPort(true);');
+  L.push('        s.setBuiltInZoomControls(false); s.setCacheMode(WebSettings.LOAD_DEFAULT);');
+  L.push('        s.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);');
+  L.push('        s.setMediaPlaybackRequiresUserGesture(false);');
+  if (opts.location) L.push('        s.setGeolocationEnabled(true);');
+  if (opts.useragent&&opts.uaString) L.push('        s.setUserAgentString("'+opts.uaString.replace(/"/g,'\\"')+'");');
+  if (opts.credentials) L.push('        webView.addJavascriptInterface(new CredentialBridge(), "AndroidCreds");');
+  L.push('        webView.setWebViewClient(new WebViewClient() {');
+  if (opts.sslonly) {
+    L.push('            @Override public void onReceivedSslError(WebView view, android.webkit.SslErrorHandler handler, android.net.http.SslError error) {');
+    L.push('                handler.cancel();');
+    L.push('            }');
+    L.push('            @Override public android.webkit.WebResourceResponse shouldInterceptRequest(WebView view, android.webkit.WebResourceRequest req) {');
+    L.push('                String scheme = req.getUrl().getScheme();');
+    L.push('                if (!"https".equals(scheme) && !"file".equals(scheme) && !"data".equals(scheme)) {');
+    L.push('                    return new android.webkit.WebResourceResponse("text/plain","UTF-8", new java.io.ByteArrayInputStream(new byte[0]));');
+    L.push('                }');
+    L.push('                return null;');
+    L.push('            }');
+  }
+  L.push('            @Override public void onPageFinished(WebView view, String pageUrl) {');
+  if (opts.credentials){
+    L.push('                SharedPreferences p = getSharedPreferences(PREFS, MODE_PRIVATE);');
+    L.push('                String em = p.getString("email", "");');
+    L.push('                if (!em.isEmpty()) {');
+    L.push('                    String js = "javascript:(function(){var ef=document.querySelectorAll(\'input[type=email],input[name*=email],input[id*=email]\');var pf=document.querySelectorAll(\'input[type=password]\');var em2=window.AndroidCreds.getEmail();var pw2=window.AndroidCreds.getPassword();if(ef.length>0&&em2)ef[0].value=em2;if(pf.length>0&&pw2)pf[0].value=pw2;document.querySelectorAll(\'form\').forEach(function(f){f.addEventListener(\'submit\',function(){var e=document.querySelector(\'input[type=email],input[name*=email]\');var p=document.querySelector(\'input[type=password]\');if(e&&p&&e.value&&p.value)window.AndroidCreds.save(e.value,p.value);});});})();";');
+    L.push('                    view.loadUrl(js);');
+    L.push('                }');
+  }
+  if (opts.customjs&&opts.customJsCode){
+    var safeJs=opts.customJsCode.replace(/\\/g,'\\\\').replace(/"/g,'\\"').replace(/\n/g,'\\n');
+    L.push('                view.loadUrl("javascript:(function(){'+safeJs+'})()");');
+  }
+  L.push('            }');
+  L.push('            @Override public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {');
+  if (opts.offline) L.push('                showOfflinePage(view);');
+  L.push('            }');
+  // New signature — required for Android 6+ (API 23+), old one no longer fires
+  L.push('            @Override public void onReceivedError(WebView view, android.webkit.WebResourceRequest request, android.webkit.WebResourceError error) {');
+  L.push('                if (request.isForMainFrame()) {');
+  if (opts.offline) L.push('                    showOfflinePage(view);');
+  L.push('                }');
+  L.push('            }');
+  L.push('        });');
+  // WebChromeClient with fullscreen video support
+  L.push('        webView.setWebChromeClient(new WebChromeClient() {');
+  // Fullscreen video: onShowCustomView
+  L.push('            @Override public void onShowCustomView(View view, CustomViewCallback callback) {');
+  L.push('                if (mCustomView != null) { callback.onCustomViewHidden(); return; }');
+  L.push('                mCustomView = view;');
+  L.push('                mCustomViewCallback = callback;');
+  L.push('                mOriginalOrientation = getRequestedOrientation();');
+  L.push('                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);');
+  L.push('                mFullscreenContainer = new FrameLayout(MainActivity.this);');
+  L.push('                mFullscreenContainer.setBackgroundColor(0xFF000000);');
+  L.push('                FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);');
+  L.push('                mFullscreenContainer.addView(view, lp);');
+  L.push('                ((FrameLayout)getWindow().getDecorView()).addView(mFullscreenContainer, lp);');
+  L.push('                applyFullscreen();');
+  L.push('                getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);');
+  L.push('            }');
+  // Fullscreen video: onHideCustomView
+  L.push('            @Override public void onHideCustomView() {');
+  L.push('                if (mCustomView == null) return;');
+  L.push('                mCustomView.setVisibility(View.GONE);');
+  L.push('                if (mFullscreenContainer != null) {');
+  L.push('                    ((FrameLayout)getWindow().getDecorView()).removeView(mFullscreenContainer);');
+  L.push('                    mFullscreenContainer = null;');
+  L.push('                }');
+  L.push('                mCustomView = null;');
+  L.push('                if (mCustomViewCallback != null) { mCustomViewCallback.onCustomViewHidden(); mCustomViewCallback = null; }');
+  L.push('                setRequestedOrientation(mOriginalOrientation);');
+  L.push('                applyFullscreen();');
+  L.push('            }');
+  if (opts.loadingbar){
+    L.push('            @Override public void onProgressChanged(WebView view, int progress) {');
+    L.push('                if (progressBar==null) return;');
+    L.push('                progressBar.setProgress(progress);');
+    L.push('                progressBar.setVisibility(progress<100?android.view.View.VISIBLE:android.view.View.GONE);');
+    L.push('            }');
+  }
+  if (opts.location){
+    L.push('            @Override public void onGeolocationPermissionsShowPrompt(String origin, GeolocationPermissions.Callback callback) { callback.invoke(origin,true,false); }');
+  }
+  if (opts.camera){
+    L.push('            @Override public void onPermissionRequest(final PermissionRequest request) { runOnUiThread(new Runnable(){@Override public void run(){request.grant(request.getResources());}}); }');
+  }
+  if (opts.filechooser){
+    L.push('            @Override public boolean onShowFileChooser(WebView v, ValueCallback<Uri[]> cb, FileChooserParams params) {');
+    L.push('                filePathCallback=cb;');
+    L.push('                android.content.Intent intent=params.createIntent();');
+    L.push('                try{startActivityForResult(intent,1001);}catch(Exception e){filePathCallback=null;return false;}');
+    L.push('                return true;');
+    L.push('            }');
+  }
+  L.push('        });');
+  L.push('    }');
+  if (opts.offline){
+    L.push('    private boolean isOnline() {');
+    L.push('        ConnectivityManager cm = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);');
+    L.push('        if (cm == null) return false;');
+    L.push('        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {');
+    L.push('            android.net.Network net = cm.getActiveNetwork();');
+    L.push('            if (net == null) return false;');
+    L.push('            android.net.NetworkCapabilities caps = cm.getNetworkCapabilities(net);');
+    L.push('            return caps != null && (caps.hasTransport(android.net.NetworkCapabilities.TRANSPORT_WIFI)');
+    L.push('                || caps.hasTransport(android.net.NetworkCapabilities.TRANSPORT_CELLULAR)');
+    L.push('                || caps.hasTransport(android.net.NetworkCapabilities.TRANSPORT_ETHERNET));');
+    L.push('        } else {');
+    L.push('            //noinspection deprecation');
+    L.push('            NetworkInfo ni = cm.getActiveNetworkInfo();');
+    L.push('            return ni != null && ni.isConnected();');
+    L.push('        }');
+    L.push('    }');
+    L.push('    private String getIconBase64() {');
+    L.push('        try {');
+    L.push('            android.graphics.Bitmap bm = android.graphics.BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher);');
+    L.push('            java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();');
+    L.push('            bm.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, baos);');
+    L.push('            return android.util.Base64.encodeToString(baos.toByteArray(), android.util.Base64.NO_WRAP);');
+    L.push('        } catch (Exception e) { return ""; }');
+    L.push('    }');
+    L.push('    private void showOfflinePage(final WebView view) {');
+    L.push('        runOnUiThread(new Runnable() { @Override public void run() {');
+    L.push('            String appName = getString(R.string.app_name);');
+    L.push('            String iconB64 = getIconBase64();');
+    // Build icon element — use app icon if available, else phone emoji
+    L.push('            String iconHtml = iconB64.isEmpty()');
+    L.push('                ? "<div class=\'emoji\'>&#128241;</div>"');
+    L.push('                : "<img src=\'data:image/png;base64," + iconB64 + "\' class=\'appicon\'/>";');
+    L.push('            String html = "<!DOCTYPE html><html><head>"');
+    L.push('                + "<meta name=\'viewport\' content=\'width=device-width,initial-scale=1\'>"');
+    L.push('                + "<style>"');
+    L.push('                + "*{margin:0;padding:0;box-sizing:border-box}"');
+    L.push('                + "body{background:#111;color:#eee;font-family:sans-serif;"');
+    L.push('                + "display:flex;flex-direction:column;align-items:center;"');
+    L.push('                + "justify-content:center;min-height:100vh;text-align:center;padding:28px}"');
+    L.push('                + ".appicon{width:88px;height:88px;border-radius:20px;margin-bottom:22px;"');
+    L.push('                + "box-shadow:0 4px 24px rgba(0,0,0,0.5)}"');
+    L.push('                + ".emoji{font-size:72px;margin-bottom:22px}"');
+    L.push('                + "h2{font-size:22px;font-weight:700;margin-bottom:10px}"');
+    L.push('                + "p{color:#888;max-width:260px;line-height:1.7;font-size:14px}"');
+    L.push('                + "button{margin-top:28px;padding:13px 40px;background:#fff;color:#111;"');
+    L.push('                + "border:none;border-radius:12px;font-size:15px;font-weight:700;"');
+    L.push('                + "cursor:pointer;transition:opacity 0.2s}"');
+    L.push('                + "button:active{opacity:0.7}"');
+    L.push('                + ".checking{margin-top:14px;font-size:12px;color:#555;min-height:18px}"');
+    L.push('                + "</style></head><body>"');
+    L.push('                + iconHtml');
+    L.push('                + "<h2>" + appName + "</h2>"');
+    L.push('                + "<p>Connect to WiFi or mobile data to access " + appName + ".</p>"');
+    L.push('                + "<button onclick=\'OfflineBridge.retry()\'>&#8635;&nbsp; Retry</button>"');
+    L.push('                + "<div class=\'checking\' id=\'msg\'></div>"');
+    L.push('                + "</body></html>";');
+    L.push('            // Add bridge BEFORE loading HTML');
+    L.push('            view.addJavascriptInterface(new OfflineBridge(view), "OfflineBridge");');
+    L.push('            view.loadDataWithBaseURL(null, html, "text/html", "UTF-8", null);');
+    L.push('        }});');
+    L.push('    }');
+    // OfflineBridge inner class — retry checks connectivity first
+    L.push('    class OfflineBridge {');
+    L.push('        private final WebView wv;');
+    L.push('        OfflineBridge(WebView wv) { this.wv = wv; }');
+    L.push('        @android.webkit.JavascriptInterface');
+    L.push('        public void retry() {');
+    L.push('            // Show checking message');
+    L.push('            runOnUiThread(new Runnable() { @Override public void run() {');
+    L.push('                wv.evaluateJavascript("document.getElementById(\'msg\').textContent=\'Checking connection...\';", null);');
+    L.push('            }});');
+    // Small delay so user sees feedback, then check
+    L.push('            new Handler().postDelayed(new Runnable() { @Override public void run() {');
+    L.push('                if (isOnline()) {');
+    // Online — load the real site
+    L.push('                    runOnUiThread(new Runnable() { @Override public void run() {');
+    L.push('                        wv.loadUrl(WEBSITE_URL);');
+    L.push('                    }});');
+    L.push('                } else {');
+    // Still offline — flicker the message, stay on page
+    L.push('                    runOnUiThread(new Runnable() { @Override public void run() {');
+    L.push('                        wv.evaluateJavascript("document.getElementById(\'msg\').textContent=\'No connection. Try again.\';", null);');
+    L.push('                        new Handler().postDelayed(new Runnable() { @Override public void run() {');
+    L.push('                            wv.evaluateJavascript("document.getElementById(\'msg\').textContent=\'\';", null);');
+    L.push('                        }}, 2500);');
+    L.push('                    }});');
+    L.push('                }');
+    L.push('            }}, 600);');
+    L.push('        }');
+    L.push('    }');
+  }
+  if (opts.updatecheck && opts.updateUrl){
+    var safeUpdateUrl2=(opts.updateUrl||'').replace(/\\/g,'\\\\').replace(/"/g,'\\"');
+    L.push('    private void checkForUpdate(final String versionUrl) {');
+    // Get the REAL installed version name correctly
+    L.push('        String cv = "1.0.0";');
+    L.push('        try { cv = getPackageManager().getPackageInfo(getPackageName(), 0).versionName; } catch (Exception ignored) {}');
+    L.push('        final String currentVersion = cv;');
+    L.push('        new Thread(new Runnable() {');
+    L.push('            @Override public void run() {');
+    L.push('                try {');
+    // Add cache-busting timestamp so GitHub CDN always returns fresh data
+    L.push('                    String urlWithCacheBust = versionUrl + (versionUrl.contains("?") ? "&" : "?") + "t=" + System.currentTimeMillis();');
+    L.push('                    java.net.URL u = new java.net.URL(urlWithCacheBust);');
+    L.push('                    java.net.HttpURLConnection c = (java.net.HttpURLConnection) u.openConnection();');
+    L.push('                    c.setConnectTimeout(6000);');
+    L.push('                    c.setReadTimeout(6000);');
+    L.push('                    c.setRequestMethod("GET");');
+    L.push('                    c.setRequestProperty("Cache-Control", "no-cache, no-store");');
+    L.push('                    c.setRequestProperty("Pragma", "no-cache");');
+    L.push('                    int status = c.getResponseCode();');
+    L.push('                    if (status != 200) return;');
+    L.push('                    java.io.BufferedReader br = new java.io.BufferedReader(new java.io.InputStreamReader(c.getInputStream()));');
+    L.push('                    StringBuilder sb = new StringBuilder();');
+    L.push('                    String line;');
+    L.push('                    while ((line = br.readLine()) != null) sb.append(line.trim());');
+    L.push('                    br.close();');
+    L.push('                    String json = sb.toString();');
+    // Simple but reliable JSON field extraction
+    L.push('                    final String remoteVersion = extractJson(json, "version");');
+    L.push('                    final String updateLink = extractJson(json, "url");');
+    L.push('                    if (remoteVersion == null || remoteVersion.isEmpty()) return;');
+    L.push('                    if (remoteVersion.equals(currentVersion)) return;');
+    // Show dialog on UI thread
+    L.push('                    runOnUiThread(new Runnable() {');
+    L.push('                        @Override public void run() {');
+    L.push('                            new AlertDialog.Builder(MainActivity.this)');
+    L.push('                                .setTitle("Update Available \uD83C\uDF89")');
+    L.push('                                .setMessage("Version " + remoteVersion + " is available!\\nYou have version " + currentVersion + ".")');
+    L.push('                                .setCancelable(false)');
+    L.push('                                .setPositiveButton("Update Now", new android.content.DialogInterface.OnClickListener() {');
+    L.push('                                    @Override public void onClick(android.content.DialogInterface d, int w) {');
+    L.push('                                        if (updateLink != null && !updateLink.isEmpty()) {');
+    L.push('                                            startActivity(new android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(updateLink)));');
+    L.push('                                        }');
+    L.push('                                    }');
+    L.push('                                })');
+    L.push('                                .setNegativeButton("Later", null)');
+    L.push('                                .show();');
+    L.push('                        }');
+    L.push('                    });');
+    L.push('                } catch (Exception e) { e.printStackTrace(); }');
+    L.push('            }');
+    L.push('        }).start();');
+    L.push('    }');
+    // Simple JSON extractor — no need for a library
+    L.push('    private String extractJson(String json, String key) {');
+    L.push('        try {');
+    L.push('            String search = "\\"" + key + "\\"";');
+    L.push('            int idx = json.indexOf(search);');
+    L.push('            if (idx < 0) return null;');
+    L.push('            int colon = json.indexOf(":", idx + search.length());');
+    L.push('            if (colon < 0) return null;');
+    L.push('            int q1 = json.indexOf("\\"", colon + 1);');
+    L.push('            if (q1 < 0) return null;');
+    L.push('            int q2 = json.indexOf("\\"", q1 + 1);');
+    L.push('            if (q2 < 0) return null;');
+    L.push('            return json.substring(q1 + 1, q2);');
+    L.push('        } catch (Exception e) { return null; }');
+    L.push('    }');
+  }
+  if (opts.tracking){
+    L.push('    private void trackAppOpen(){');
+    L.push('        SharedPreferences p=getSharedPreferences(TRACK_PREFS,MODE_PRIVATE);');
+    L.push('        int total=p.getInt("total_opens",0)+1;');
+    L.push('        String today=new SimpleDateFormat("yyyy-MM-dd",Locale.getDefault()).format(new Date());');
+    L.push('        p.edit().putInt("total_opens",total).putString("last_open",new SimpleDateFormat("yyyy-MM-dd HH:mm:ss",Locale.getDefault()).format(new Date())).putString("first_install",p.getString("first_install",today)).apply();');
+    L.push('    }');
+  }
+  if (opts.credentials){
+    L.push('    class CredentialBridge {');
+    L.push('        @JavascriptInterface public void save(String email,String password){getSharedPreferences(PREFS,MODE_PRIVATE).edit().putString("email",email).putString("password",android.util.Base64.encodeToString(password.getBytes(),android.util.Base64.NO_WRAP)).apply();}');
+    L.push('        @JavascriptInterface public String getEmail(){return getSharedPreferences(PREFS,MODE_PRIVATE).getString("email","");}');
+    L.push('        @JavascriptInterface public String getPassword(){String enc=getSharedPreferences(PREFS,MODE_PRIVATE).getString("password","");if(enc.isEmpty())return "";try{return new String(android.util.Base64.decode(enc,android.util.Base64.NO_WRAP));}catch(Exception e){return enc;}}');
+    L.push('    }');
+  }
+  L.push('    private void loadWebsite(){');
+  if (opts.offline) {
+    L.push('        if (isOnline()) { webView.loadUrl(WEBSITE_URL); } else { showOfflinePage(webView); }');
+  } else {
+    L.push('        webView.loadUrl(WEBSITE_URL);');
+  }
+  L.push('    }');
+  if (opts.backbutton){L.push('    @Override public void onBackPressed(){if(webView!=null&&webView.canGoBack())webView.goBack();else super.onBackPressed();}');}
+  if (opts.filechooser){L.push('    @Override protected void onActivityResult(int req,int res,android.content.Intent data){if(req==1001&&filePathCallback!=null){filePathCallback.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(res,data));filePathCallback=null;}}');}
+  L.push('    @Override public void onWindowFocusChanged(boolean hasFocus) {');
+  L.push('        super.onWindowFocusChanged(hasFocus);');
+  L.push('        if (hasFocus) applyFullscreen();');
+  L.push('    }');
+  L.push('    @Override protected void onResume() {');
+  L.push('        super.onResume();');
+  L.push('        applyFullscreen();');
+  L.push('        if (webView != null) webView.onResume();');
+  L.push('    }');
+  L.push('    @Override protected void onPause(){super.onPause();if(webView!=null)webView.onPause();}');
+  L.push('    @Override protected void onDestroy() {');
+  L.push('        if (webView != null) { webView.stopLoading(); webView.destroy(); }');
+  if (opts.cleardata) {
+    L.push('        try {');
+    L.push('            android.webkit.CookieManager.getInstance().removeAllCookies(null);');
+    L.push('            android.webkit.CookieManager.getInstance().flush();');
+    L.push('            if (webView != null) { webView.clearCache(true); webView.clearHistory(); webView.clearFormData(); }');
+    L.push('        } catch (Exception ignored) {}');
+  }
+  L.push('        super.onDestroy();');
+  L.push('    }');
+  // Security helpers
+  if (opts.rootexit) {
+    L.push('    private boolean isRooted() {');
+    L.push('        try {');
+    L.push('            String[] paths={"/system/app/Superuser.apk","/sbin/su","/data/local/xbin/su","/data/local/bin/su","/system/bin/failsafe/su"};');
+    L.push('            for (String p:paths) if (new java.io.File(p).exists()) return true;');
+    L.push('        } catch (Exception ignored) {}');
+    L.push('        return false;');
+    L.push('    }');
+  }
+  if (opts.emublock) {
+    L.push('    private boolean isEmulator() {');
+    L.push('        return (android.os.Build.FINGERPRINT.startsWith("generic")');
+    L.push('            || android.os.Build.FINGERPRINT.startsWith("unknown")');
+    L.push('            || android.os.Build.MODEL.contains("google_sdk")');
+    L.push('            || android.os.Build.MODEL.contains("Emulator")');
+    L.push('            || android.os.Build.MODEL.contains("Android SDK built for x86")');
+    L.push('            || android.os.Build.MANUFACTURER.contains("Genymotion")');
+    L.push('            || android.os.Build.BRAND.startsWith("generic")');
+    L.push('            || android.os.Build.DEVICE.startsWith("generic")');
+    L.push('            || "google_sdk".equals(android.os.Build.PRODUCT));');
+    L.push('    }');
+  }
+  if (opts.rootexit || opts.emublock) {
+    L.push('    private void showSecurityAlert(String msg) {');
+    L.push('        new android.app.AlertDialog.Builder(this)');
+    L.push('            .setTitle("Security Alert")');
+    L.push('            .setMessage(msg)');
+    L.push('            .setCancelable(false)');
+    L.push('            .setPositiveButton("OK", new android.content.DialogInterface.OnClickListener() {');
+    L.push('                public void onClick(android.content.DialogInterface d, int w) { finish(); }');
+    L.push('            }).show();');
+    L.push('    }');
+  }
+  if (opts.pinlock) {
+    L.push('    private void checkBiometricLock() {');
+    L.push('        java.util.concurrent.Executor executor = new java.util.concurrent.Executor() {');
+    L.push('            @Override public void execute(Runnable r) { new Handler(android.os.Looper.getMainLooper()).post(r); }');
+    L.push('        };');
+    L.push('        androidx.biometric.BiometricPrompt.PromptInfo info = new androidx.biometric.BiometricPrompt.PromptInfo.Builder()');
+    L.push('            .setTitle("Unlock App")');
+    L.push('            .setSubtitle("Use fingerprint or PIN to continue")');
+    L.push('            .setAllowedAuthenticators(');
+    L.push('                androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG |');
+    L.push('                androidx.biometric.BiometricManager.Authenticators.DEVICE_CREDENTIAL)');
+    L.push('            .build();');
+    L.push('        new androidx.biometric.BiometricPrompt(this, executor,');
+    L.push('            new androidx.biometric.BiometricPrompt.AuthenticationCallback() {');
+    L.push('                @Override public void onAuthenticationSucceeded(androidx.biometric.BiometricPrompt.AuthenticationResult r) {');
+    L.push('                    loadWebsite();');
+    L.push('                }');
+    L.push('                @Override public void onAuthenticationFailed() { }');
+    L.push('                @Override public void onAuthenticationError(int c, CharSequence m) { loadWebsite(); }');
+    L.push('            }).authenticate(info);');
+    L.push('    }');
+  }
+  L.push('}');
+  return L.join('\n');
+}
+
+function buildSplashActivity(pkg){
+  return 'package '+pkg+';\nimport android.app.Activity;\nimport android.content.Intent;\nimport android.os.Bundle;\nimport android.os.Handler;\nimport android.view.WindowManager;\nimport android.view.animation.AlphaAnimation;\nimport android.view.animation.Animation;\nimport android.view.animation.AnimationSet;\nimport android.view.animation.ScaleAnimation;\nimport android.widget.ImageView;\nimport android.widget.TextView;\npublic class SplashActivity extends Activity {\n    @Override protected void onCreate(Bundle savedInstanceState){\n        super.onCreate(savedInstanceState);\n        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);\n        setContentView(R.layout.activity_splash);\n        ImageView icon=findViewById(R.id.splashIcon);\n        TextView name=findViewById(R.id.splashName);\n        ScaleAnimation scale=new ScaleAnimation(0.7f,1f,0.7f,1f,Animation.RELATIVE_TO_SELF,0.5f,Animation.RELATIVE_TO_SELF,0.5f);\n        scale.setDuration(600);\n        AlphaAnimation fade=new AlphaAnimation(0f,1f);fade.setDuration(600);\n        AnimationSet anim=new AnimationSet(true);anim.addAnimation(scale);anim.addAnimation(fade);\n        icon.startAnimation(anim);\n        AlphaAnimation fadeText=new AlphaAnimation(0f,1f);fadeText.setDuration(700);fadeText.setStartOffset(300);\n        name.startAnimation(fadeText);\n        new Handler().postDelayed(new Runnable(){@Override public void run(){startActivity(new Intent(SplashActivity.this,MainActivity.class));overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out);finish();}},2000);\n    }\n    @Override public void onBackPressed(){}\n}';
+}
+
+function buildSplashLayout(){
+  return '<?xml version="1.0" encoding="utf-8"?>\n<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"\n    android:layout_width="match_parent" android:layout_height="match_parent"\n    android:orientation="vertical" android:gravity="center"\n    android:background="@color/primaryColor">\n    <ImageView android:id="@+id/splashIcon"\n        android:layout_width="120dp" android:layout_height="120dp"\n        android:src="@mipmap/ic_launcher" android:scaleType="fitCenter"/>\n    <TextView android:id="@+id/splashName"\n        android:layout_width="wrap_content" android:layout_height="wrap_content"\n        android:layout_marginTop="20dp" android:text="@string/app_name"\n        android:textColor="#FFFFFF" android:textSize="24sp" android:textStyle="bold"/>\n    <ProgressBar android:layout_width="36dp" android:layout_height="36dp"\n        android:layout_marginTop="32dp" android:indeterminateTint="#80FFFFFF"\n        style="?android:attr/progressBarStyleSmall"/>\n</LinearLayout>';
+}
+
+function buildLayout(opts){
+  if (!opts.loadingbar&&!opts.swiperefresh){
+    return '<?xml version="1.0" encoding="utf-8"?>\n<WebView xmlns:android="http://schemas.android.com/apk/res/android"\n    android:id="@+id/webview"\n    android:layout_width="match_parent"\n    android:layout_height="match_parent"\n    android:fitsSystemWindows="false"/>';
+  }
+  var lines=['<?xml version="1.0" encoding="utf-8"?>','<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"\n    android:layout_width="match_parent"\n    android:layout_height="match_parent"\n    android:fitsSystemWindows="false">'];
+  if (opts.loadingbar){
+    lines.push('    <ProgressBar android:id="@+id/progressBar"\n        android:layout_width="match_parent" android:layout_height="4dp"\n        android:layout_alignParentTop="true"\n        style="?android:attr/progressBarStyleHorizontal"\n        android:progressTint="@color/accentColor"\n        android:max="100" android:visibility="gone"/>');
+  }
+  var below=opts.loadingbar?'\n        android:layout_below="@id/progressBar"':'';
+  if (opts.swiperefresh){
+    lines.push('    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout\n        android:id="@+id/swipe_refresh"\n        android:layout_width="match_parent"\n        android:layout_height="match_parent"\n        android:fitsSystemWindows="false"'+below+'>\n        <WebView android:id="@+id/webview"\n            android:layout_width="match_parent"\n            android:layout_height="match_parent"\n            android:fitsSystemWindows="false"/>\n    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>');
+  } else {
+    lines.push('    <WebView android:id="@+id/webview"\n        android:layout_width="match_parent"\n        android:layout_height="match_parent"\n        android:fitsSystemWindows="false"'+below+'/>');
+  }
+  lines.push('</RelativeLayout>');
+  return lines.join('\n');
+}
+
+function buildStrings(appName,desc,devName,url){
+  return '<?xml version="1.0" encoding="utf-8"?>\n<resources>\n    <string name="app_name">'+esc(appName)+'</string>\n    <string name="app_description">'+esc(desc)+'</string>\n    <string name="developer">'+esc(devName)+'</string>\n    <string name="website">'+esc(url)+'</string>\n</resources>';
+}
+function buildColors(primary,accent){
+  return '<?xml version="1.0" encoding="utf-8"?>\n<resources>\n    <color name="primaryColor">'+primary+'</color>\n    <color name="accentColor">'+accent+'</color>\n</resources>';
+}
+function buildThemes(appName,opts){
+  var safe=appName.replace(/[^a-zA-Z0-9]/g,'');
+  var out='<?xml version="1.0" encoding="utf-8"?>\n<resources>\n'+
+    '    <style name="Theme.'+safe+'" parent="Theme.AppCompat.NoActionBar">\n'+
+    '        <item name="android:colorPrimary">@color/primaryColor</item>\n'+
+    '        <item name="android:colorAccent">@color/accentColor</item>\n'+
+    '        <item name="android:windowBackground">@color/primaryColor</item>\n'+
+    '        <item name="android:windowNoTitle">true</item>\n'+
+    '        <item name="android:windowFullscreen">true</item>\n'+
+    '        <item name="android:fitsSystemWindows">false</item>\n'+
+    '        <item name="android:statusBarColor">@android:color/transparent</item>\n'+
+    '        <item name="android:navigationBarColor">@android:color/transparent</item>\n'+
+    '        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>\n'+
+    '    </style>\n'+
+    '    <style name="Theme.Splash" parent="Theme.'+safe+'">\n'+
+    '        <item name="android:windowFullscreen">true</item>\n'+
+    '        <item name="android:windowBackground">@color/primaryColor</item>\n'+
+    '        <item name="android:statusBarColor">@android:color/transparent</item>\n'+
+    '        <item name="android:navigationBarColor">@android:color/transparent</item>\n'+
+    '        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>\n'+
+    '    </style>\n'+
+    '</resources>';
+  return out;
+}
+function buildAppGradle(pkg,version,opts){
+  var deps="    implementation 'androidx.appcompat:appcompat:1.6.1'\n    implementation 'com.google.android.material:material:1.11.0'";
+  if (opts.swiperefresh) deps+="\n    implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'";
+  if (opts.pinlock) deps+="\n    implementation 'androidx.biometric:biometric:1.2.0-alpha05'\n    implementation 'androidx.fragment:fragment:1.6.2'";
+  return "plugins {\n    id 'com.android.application'\n}\nandroid {\n    compileSdk 34\n    buildToolsVersion \"34.0.0\"\n    namespace \""+pkg+"\"\n    defaultConfig {\n        applicationId \""+pkg+"\"\n        minSdk 21\n        targetSdk 34\n        versionCode 1\n        versionName \""+version+"\"\n    }\n    buildTypes {\n        release {\n            minifyEnabled false\n            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'\n        }\n    }\n    compileOptions {\n        sourceCompatibility JavaVersion.VERSION_1_8\n        targetCompatibility JavaVersion.VERSION_1_8\n    }\n}\ndependencies {\n"+deps+"\n}\n";
+}
+function buildRootGradle(){return "plugins {\n    id 'com.android.application' version '8.3.2' apply false\n}\n";}
+function buildSettings(appName){
+  var safe=appName.replace(/[^a-zA-Z0-9]/g,'');
+  return "pluginManagement {\n    repositories {\n        google()\n        mavenCentral()\n        gradlePluginPortal()\n    }\n}\ndependencyResolutionManagement {\n    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)\n    repositories {\n        google()\n        mavenCentral()\n    }\n}\nrootProject.name = \""+safe+"\"\ninclude ':app'\n";
+}
+function buildGithubAction(appName){
+  var slug=appName.replace(/[^a-zA-Z0-9]/g,'-');
+  return ['name: Build APK','','on:','  push:','    branches: [ main, master ]','  workflow_dispatch:','','jobs:','  build:','    runs-on: ubuntu-latest','    steps:','      - uses: actions/checkout@v4','','      - name: Set up JDK 17','        uses: actions/setup-java@v4','        with:','          java-version: \'17\'','          distribution: \'temurin\'','          cache: gradle','','      - name: Setup Gradle 8.6','        uses: gradle/actions/setup-gradle@v3','        with:','          gradle-version: \'8.6\'','','      - name: Accept SDK licenses & install build tools','        run: |','          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null 2>&1 || true','          $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "platforms;android-34" "build-tools;34.0.0"','','      - name: Generate Gradle wrapper JAR','        run: |','          gradle wrapper --gradle-version 8.6 --distribution-type bin','          chmod +x gradlew','','      - name: Build Debug APK','        run: ./gradlew assembleDebug --stacktrace --no-daemon','','      - name: Upload APK','        uses: actions/upload-artifact@v4','        with:','          name: '+slug+'-debug-APK','          path: app/build/outputs/apk/debug/*.apk','          retention-days: 30',''].join('\n');
+}
+function buildGradleWrapperProps(){return 'distributionBase=GRADLE_USER_HOME\ndistributionPath=wrapper/dists\ndistributionUrl=https\\://services.gradle.org/distributions/gradle-8.6-bin.zip\nnetworkTimeout=10000\nzipStoreBase=GRADLE_USER_HOME\nzipStorePath=wrapper/dists\n';}
+function buildGradlew(){return '#!/usr/bin/env sh\nAPP_HOME=`dirname "$0"`\nAPP_HOME=`cd "$APP_HOME" && pwd`\nDEFAULT_JVM_OPTS=\'"-Xmx64m" "-Xms64m"\'\nCLASSPATH=$APP_HOME/gradle/wrapper/gradle-wrapper.jar\nif [ ! -f "$CLASSPATH" ]; then\n  echo "ERROR: gradle-wrapper.jar not found." >&2\n  exit 1\nfi\nexec java $DEFAULT_JVM_OPTS -classpath "$CLASSPATH" org.gradle.wrapper.GradleWrapperMain "$@"\n';}
+function buildGradlewBat(){return '@if "%DEBUG%"=="" @echo off\r\nset APP_HOME=%~dp0\r\nset CLASSPATH=%APP_HOME%gradle\\wrapper\\gradle-wrapper.jar\r\njava -classpath "%CLASSPATH%" org.gradle.wrapper.GradleWrapperMain %*\r\n';}
+function buildNetworkSecurity(){return '<?xml version="1.0" encoding="utf-8"?>\n<network-security-config>\n    <base-config cleartextTrafficPermitted="true">\n        <trust-anchors><certificates src="system"/></trust-anchors>\n    </base-config>\n</network-security-config>\n';}
+function buildReadme(appName,url,pkg,version,devName,opts){
+  var feats=Object.keys(FEAT_NAMES).filter(function(k){return opts[k];}).map(function(k){return '- '+FEAT_NAMES[k];});
+  return '# '+appName+' — Android App\n\nGenerated by PushToApp\n\n## App Details\n| Field | Value |\n|-------|-------|\n| Website | '+url+' |\n| Package | '+pkg+' |\n| Version | '+version+' |\n| Developer | '+devName+' |\n\n## Features\n'+feats.join('\n')+'\n\n## Build via GitHub Actions\n1. Create a public GitHub repo\n2. Push the **contents** of this ZIP to the repo ROOT\n   - `gradlew`, `build.gradle`, `.github/` must be at root\n3. Actions tab → "Build APK" runs automatically (~3–5 min)\n4. Download APK from Artifacts section\n\n## Build via Android Studio\n1. Install Android Studio: https://developer.android.com/studio\n2. Open this folder\n3. Build → Build Bundle(s)/APK(s) → Build APK(s)\n4. APK: `app/build/outputs/apk/debug/app-debug.apk`\n';
+}
+
+/* ── VERSION JSON PREVIEW ── */
+function updateVersionJsonPreview() {
+  var el = document.getElementById('versionJsonPreview');
+  if (!el) return;
+  // Read pkg text directly from DOM — no calling updatePkg() to avoid infinite loop
+  var pkgEl = document.getElementById('pkgPreview');
+  var pkg = pkgEl ? pkgEl.textContent.trim() : 'com.example.myapp';
+  var version = document.getElementById('version').value.trim() || '1.0.0';
+  var json = '{"version":"' + version + '","url":"https://play.google.com/store/apps/details?id=' + pkg + '"}';
+  el.textContent = json;
+}
+function copyVersionJson() {
+  var el = document.getElementById('versionJsonPreview');
+  if (!el) return;
+  navigator.clipboard.writeText(el.textContent).then(function() {
+    var btn = document.getElementById('copyJsonBtn');
+    btn.textContent = '✅ Copied!';
+    setTimeout(function(){ btn.textContent = '📋 Copy JSON'; }, 2000);
+  }).catch(function() {
+    // fallback
+    var ta = document.createElement('textarea');
+    ta.value = el.textContent;
+    document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta);
+    var btn = document.getElementById('copyJsonBtn');
+    btn.textContent = '✅ Copied!';
+    setTimeout(function(){ btn.textContent = '📋 Copy JSON'; }, 2000);
+  });
+}
+
+/* ── INIT ── */
+window.onload=function(){
+  buildChips(pPresets,'primaryPick','primaryHex','primaryChips');
+  buildChips(aPresets,'accentPick','accentHex','accentChips');
+  updatePkg(); updatePreview();
+  updateAppsCount();
+  ['splash','swiperefresh','backbutton'].forEach(function(f){
+    var el=document.getElementById('f-'+f);
+    if(el){var chk=el.querySelector('.chk');chk.textContent='✓';chk.style.color='var(--bg)';}
+  });
+  document.getElementById('url').addEventListener('input', function() { updatePkg(); updatePreview(); });
+
+  // Live clock in phone
+  function updateClock() {
+    var now = new Date();
+    var h = now.getHours() % 12 || 12;
+    var m = String(now.getMinutes()).padStart(2,'0');
+    var t = h + ':' + m;
+    var el1 = document.getElementById('homeTime');
+    var el2 = document.getElementById('webTime');
+    if (el1) el1.textContent = t;
+    if (el2) el2.textContent = t;
+  }
+  updateClock();
+  setInterval(updateClock, 10000);
+
+  // Show tap hint after 1s
+  setTimeout(function(){
+    var hint = document.getElementById('tapHint');
+    if (hint) hint.style.opacity = '1';
+  }, 1200);
+};
+</script>
+</body>
+
+<!-- ══ MY APPS PAGE ══ -->
+<div id="myAppsPage" style="display:none;position:fixed;inset:0;z-index:500;background:var(--bg);overflow-y:auto">
+  <div class="hdr" style="position:sticky;top:0;z-index:10">
+    <div class="logo">
+      <svg class="logo-icon" width="32" height="32" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="7" fill="#222"/><rect x="0.5" y="0.5" width="31" height="31" rx="6.5" stroke="#3a3a3a"/><path d="M19.5 8.5C18.05 8.5 17 9.6 17 11C17 11.55 17.2 12.05 17.5 12.45L17.85 12.85L10.6 20.1L10.2 19.8C9.85 19.55 9.45 19.4 9 19.4C7.6 19.4 6.5 20.5 6.5 21.9C6.5 23.3 7.6 24.4 9 24.4C10.4 24.4 11.5 23.3 11.5 21.9C11.5 21.45 11.35 21.05 11.1 20.7L10.8 20.3L18.05 13.05L18.45 13.4C18.8 13.7 19.3 13.9 19.8 13.9C21.2 13.9 22.3 12.8 22.3 11.4C22.3 11 22.2 10.6 22 10.3L20.55 11.75L19.4 11.85L18.65 11.1L18.75 9.95L20.2 8.5C20 8.5 19.75 8.5 19.5 8.5Z" fill="#888"/></svg>
+      PushToApp<span class="logo-by">by @shikwonh</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="hdr-nav-btn" onclick="hideMyApps()">← Back to Builder</button>
+      <div class="hdr-badge">My Apps</div>
+    </div>
+  </div>
+
+  <div class="apps-layout">
+    <div class="apps-hero">
+      <div class="apps-hero-title">📦 My Published Apps</div>
+      <div class="apps-hero-sub">All the Android projects you've generated — ready to reference anytime.</div>
+    </div>
+    <div id="appsListWrap"></div>
+  </div>
+</div>
+
+<script>
+/* ── MY APPS STORAGE ── */
+function loadApps() {
+  try { return JSON.parse(localStorage.getItem('pushtoapp_apps') || '[]'); } catch(e) { return []; }
+}
+function saveApps(apps) {
+  try { localStorage.setItem('pushtoapp_apps', JSON.stringify(apps)); } catch(e) {}
+}
+function saveCurrentApp() {
+  var apps = loadApps();
+  var appName = document.getElementById('appName').value.trim() || 'Untitled App';
+  var url = document.getElementById('url').value.trim() || '';
+  var version = document.getElementById('version').value.trim() || '1.0.0';
+  var devName = document.getElementById('devName').value.trim() || '';
+  var pkg = updatePkg();
+  var feats = Array.from(activeFeatures);
+  var icon = iconBase64 ? 'data:image/png;base64,' + iconBase64 : null;
+  var primary = document.getElementById('primaryHex').value || '#111111';
+  var accent = document.getElementById('accentHex').value || '#ffffff';
+  var id = 'app_' + Date.now();
+  apps.unshift({
+    id: id, name: appName, url: url, version: version,
+    devName: devName, pkg: pkg, features: feats,
+    icon: icon, primary: primary, accent: accent,
+    date: new Date().toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}),
+    sourceMode: sourceMode
+  });
+  if (apps.length > 50) apps = apps.slice(0, 50);
+  saveApps(apps);
+  updateAppsCount();
+}
+function updateAppsCount() {
+  var apps = loadApps();
+  ['hdrAppsCount','hpAppsCount'].forEach(function(id){
+    var badge = document.getElementById(id);
+    if (!badge) return;
+    if (apps.length > 0) {
+      badge.textContent = apps.length;
+      badge.style.display = 'inline-block';
+    } else {
+      badge.style.display = 'none';
+    }
+  });
+}
+function deleteApp(id) {
+  if (!confirm('Remove this app from your list?')) return;
+  var apps = loadApps().filter(function(a){ return a.id !== id; });
+  saveApps(apps);
+  updateAppsCount();
+  renderApps();
+}
+
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function renderApps() {
+  var apps = loadApps();
+  var wrap = document.getElementById('appsListWrap');
+  if (!wrap) return;
+  if (!apps.length) {
+    wrap.innerHTML = '<div class="apps-empty"><div class="apps-empty-icon">📭</div><div class="apps-empty-title">No apps yet</div><div class="apps-empty-sub">Once you generate an Android project,<br>it will appear here for easy access.</div><button class="apps-empty-btn" onclick="hideMyApps()"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg> Build Your First App</button></div>';
+    return;
+  }
+  var featNames = {splash:'Splash',swiperefresh:'Pull-to-Refresh',fullscreen:'Fullscreen',loadingbar:'Loading Bar',portrait:'Portrait',wakelock:'Keep On',backbutton:'Back Btn',filechooser:'File Upload',screenshot:'No Screenshots',credentials:'Auto-Login',pinlock:'PIN Lock',rootexit:'Block Root',emublock:'Block Emu',cleardata:'Clear Data',sslonly:'HTTPS Only',devtools:'No Debug',tapjack:'Anti-Tapjack',offline:'Offline',location:'Location',camera:'Camera',useragent:'Custom UA',tracking:'Tracking',customjs:'Custom JS',updatecheck:'Updates'};
+  var html = '<div class="apps-grid">';
+  apps.forEach(function(app) {
+    var iconHtml = app.icon
+      ? '<img src="' + app.icon + '" alt="icon" style="width:100%;height:100%;object-fit:cover;border-radius:9px">'
+      : '<span style="font-size:22px">📱</span>';
+    var featHtml = (app.features || []).slice(0,4).map(function(f){
+      return '<span class="app-feat-tag">' + escHtml(featNames[f] || f) + '</span>';
+    }).join('');
+    if ((app.features||[]).length > 4) featHtml += '<span class="app-feat-tag">+' + (app.features.length-4) + '</span>';
+    var displayUrl = app.sourceMode === 'html' ? '📄 HTML File' : (app.url || '—');
+    html += '<div class="app-card">' +
+      '<div class="app-card-top">' +
+        '<div class="app-card-icon" style="background:' + escHtml(app.primary) + '">' + iconHtml + '</div>' +
+        '<div style="min-width:0">' +
+          '<div class="app-card-name">' + escHtml(app.name) + '</div>' +
+          '<div class="app-card-url" title="' + escHtml(displayUrl) + '">' + escHtml(displayUrl) + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="app-card-meta">' +
+        '<span class="app-meta-badge">v' + escHtml(app.version) + '</span>' +
+        '<span class="app-meta-badge" style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escHtml(app.pkg) + '</span>' +
+        (app.devName ? '<span class="app-meta-badge">👤 ' + escHtml(app.devName) + '</span>' : '') +
+      '</div>' +
+      (featHtml ? '<div class="app-card-feats">' + featHtml + '</div>' : '') +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">' +
+        '<span class="app-card-date">📅 ' + escHtml(app.date) + '</span>' +
+      '</div>' +
+      '<div class="app-card-actions">' +
+        '<button class="app-action-btn app-action-del" onclick="deleteApp(\'' + app.id + '\')">🗑 Remove</button>' +
+      '</div>' +
+    '</div>';
+  });
+  html += '</div>';
+  wrap.innerHTML = html;
+}
+
+/* ── PAGE SWITCH ── */
+function showMyApps() {
+  renderApps();
+  document.getElementById('myAppsPage').style.display = 'block';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function hideMyApps() {
+  document.getElementById('myAppsPage').style.display = 'none';
+}
+
+/* ── GO HOME / RESET ── */
+function goHome() {
+  // Reset all form fields
+  document.getElementById('appName').value = '';
+  document.getElementById('url').value = '';
+  document.getElementById('version').value = '1.0.0';
+  document.getElementById('desc').value = '';
+  document.getElementById('devName').value = '';
+  document.getElementById('devEmail').value = '';
+  iconBase64 = null;
+  htmlFileContent = null;
+  htmlFileRawContent = null;
+  uploadedFiles = {};
+  entryHtmlFile = 'index.html';
+  sourceMode = 'url';
+  activeFeatures = new Set(['splash','swiperefresh','backbutton']);
+  zipBlob = null;
+  iosZipBlob = null;
+
+  // Reset icon preview
+  var iconPrev = document.getElementById('iconPrev');
+  if (iconPrev) { iconPrev.src = ''; iconPrev.classList.remove('show'); }
+  var hint = document.querySelector('#iconDrop .drop-hint');
+  if (hint) hint.style.display = '';
+
+  // Reset file upload UI
+  document.getElementById('htmlDropHint').style.display = '';
+  document.getElementById('htmlReady').style.display = 'none';
+  document.getElementById('fileList') && (document.getElementById('fileList').innerHTML = '');
+  document.getElementById('entryPointRow') && (document.getElementById('entryPointRow').style.display = 'none');
+
+  // Reset all feature chips
+  document.querySelectorAll('.feat').forEach(function(el){
+    el.classList.remove('on');
+    var chk = el.querySelector('.chk');
+    if (chk) { chk.textContent = ''; chk.style.color = 'transparent'; }
+  });
+  ['splash','swiperefresh','backbutton'].forEach(function(f){
+    var el = document.getElementById('f-'+f);
+    if (el) { el.classList.add('on'); var chk=el.querySelector('.chk'); if(chk){chk.textContent='✓'; chk.style.color='var(--bg)';} }
+  });
+
+  // Reset source mode UI
+  setSourceMode('url');
+
+  // Reset colors
+  document.getElementById('primaryPick').value = '#111111';
+  document.getElementById('primaryHex').value = '#111111';
+  document.getElementById('accentPick').value = '#ffffff';
+  document.getElementById('accentHex').value = '#ffffff';
+
+  // Hide output area
+  var oa = document.getElementById('outputArea');
+  if (oa) oa.classList.remove('show');
+  var pw = document.getElementById('progWrap');
+  if (pw) pw.style.display = 'none';
+  var gb = document.getElementById('genBtn');
+  if (gb) {
+    gb.disabled = false;
+    gb.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg> Generate Android Project ZIP';
+  }
+
+  goStep(1);
+  updatePkg();
+  updatePreview();
+  // Return to homepage
+  showHomePage();
+}
+</script>
+</html>
